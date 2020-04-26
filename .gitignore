@@ -1,0 +1,11 @@
+.vscode
+.Rhistory
+main
+main.cpp
+test_lib
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+logs
+Makefile
+std_bot/test_class
