@@ -80,6 +80,8 @@ public:
     void push(T dat) { data.push_back(dat); };
     //Pushes data at the end of the buffer
     void push(vector<T> dat) { data.insert(data.end(), dat.begin(), dat.end()); };
+    //Pushes data at the end of the buffer
+    void push(T *dat, int length) { data.insert(data.end(), dat, dat + length); };
 
     //Pops one unit of data from the end of the vector. Data is erased
     T pop();

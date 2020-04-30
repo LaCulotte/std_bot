@@ -9,6 +9,7 @@ public:
 
     MessageDataBuffer() {};
     MessageDataBuffer(vector<char> dat) : DataBuffer<char>(dat) {};
+    MessageDataBuffer(char *dat, int size) : DataBuffer<char>(dat, size) {};
 
     MessageDataBuffer(const MessageDataBuffer& other) : DataBuffer<char>(other) {};
     MessageDataBuffer& operator=(const MessageDataBuffer& other) = default;

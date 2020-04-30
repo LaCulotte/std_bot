@@ -17,8 +17,8 @@ public:
   
 
 
-    virtual void serialize(shared_ptr<MessageDataBuffer> output) {};
-    virtual void deserialize(shared_ptr<MessageDataBuffer> input) {};
+    virtual bool serialize(shared_ptr<MessageDataBuffer> output) {};
+    virtual bool deserialize(shared_ptr<MessageDataBuffer> input) {};
 
     virtual unsigned int getId() { return protocolId; };
 

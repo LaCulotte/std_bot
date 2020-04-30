@@ -19,4 +19,4 @@ public:
     static const unsigned int protocolId = 1;
 };
 
-#endif 
+#endif

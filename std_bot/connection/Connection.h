@@ -13,20 +13,32 @@ public:
     virtual Connection& operator=(const Connection& other) = default;
     virtual ~Connection() = default;
 
-    virtual sp<Message> readMessage();
-    virtual vector<sp<Message>> readMessages(int n);
-    virtual vector<sp<Message>> readAllMessages();
+    // Should look like : readWrap -> unwrapData -> readMessageData -> msg->desirialize(msgData)
+    virtual sp<Message> readMessage() { return nullptr; };
+    virtual vector<sp<Message>> readMessages(int n) { return vector<sp<Message>>(); };
+    virtual vector<sp<Message>> readAllMessages() { return vector<sp<Message>>(); };
 
-    virtual bool send(sp<Message> msg);
-    virtual bool isThereMessage(); 
+    virtual bool sendMessage(sp<Message> msg) { return false; };
+    virtual bool isThereMessage() = 0; 
 
-protected:
-    bool isConnected = false;
+    virtual bool isConnected() { return connected; };
+
+// protected:
+public:
+    bool connected = false;
     
 
-    virtual bool writeData(sp<MessageDataBuffer> data);
-    virtual sp<MessageDataBuffer> readData();
-    virtual void wrapData(sp<MessageDataBuffer> data, sp<Message> msg);
+    virtual bool writeData(sp<MessageDataBuffer> data) { return false; };
+    virtual sp<MessageDataBuffer> readData(int length) { return nullptr; };
+
+    // Write header to identify the type and other descritors of the message (length for example)
+    virtual void wrapData(sp<MessageDataBuffer> data, sp<Message> msg) {};
+    // Read header to identify the type and other descritors of the message (length for example)
+    // This step should not fully load the message, but rather readMessage()
+    // This step should be a preload, where you gather information on how much data you need to read
+    // to load the message and/or how to interpret it
+    // TODO : more suitable name
+    virtual sp<Message> unwrapData(sp<MessageDataBuffer> data) { return nullptr; };
 };
 
 #endif
