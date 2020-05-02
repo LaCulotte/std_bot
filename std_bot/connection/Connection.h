@@ -4,6 +4,7 @@
 #include "std_include.h"
 #include "ptr_include.h"
 #include "Message.h"
+#include "MessageTypeHandler.h"
 
 class Connection{
 public:
@@ -13,20 +14,33 @@ public:
     virtual Connection& operator=(const Connection& other) = default;
     virtual ~Connection() = default;
 
-    // Should look like : readWrap -> unwrapData -> readMessageData -> msg->desirialize(msgData)
+    virtual void initHandler() {}; 
+
+    // If data the message returned is invalid, discard the message. Then there is two options : 
+    // 1. Empty the socket input buffer and wait for other messages to come
+    // Pros : You make sure to not interpret wrong message.
+    // Cons : You may lose some messages
+    // 2. Ignore the invalid message and treat the following data as if it was a new message
+    // Pros : You are almost sure to not lose any message (not true if the header is more than one byte)
+    // Cons : You may interpret message data as a header. If this header is valid, you may interpret a wrong message
+    //        that can mess with the system continuity
+    // In my opinion, you should use the first solution if the messages received are few and big, and you can handle losing some messages
+    //                you should use the second solution if you have to (and can) make sure that you do not lose any message
+
     virtual sp<Message> readMessage() { return nullptr; };
     virtual vector<sp<Message>> readMessages(int n) { return vector<sp<Message>>(); };
     virtual vector<sp<Message>> readAllMessages() { return vector<sp<Message>>(); };
 
     virtual bool sendMessage(sp<Message> msg) { return false; };
-    virtual bool isThereMessage() = 0; 
+    virtual bool isThereMessage() { return false; }; 
+
+    virtual void temp() { cout << "Connection" << endl; };
 
     virtual bool isConnected() { return connected; };
 
 // protected:
 public:
     bool connected = false;
-    
 
     virtual bool writeData(sp<MessageDataBuffer> data) { return false; };
     virtual sp<MessageDataBuffer> readData(int length) { return nullptr; };
@@ -39,6 +53,9 @@ public:
     // to load the message and/or how to interpret it
     // TODO : more suitable name
     virtual sp<Message> unwrapData(sp<MessageDataBuffer> data) { return nullptr; };
+
+    sp<MessageTypeHandler> msgTypeHandler;
+
 };
 
 #endif

@@ -26,3 +26,5 @@ target_include_directories(test_lib PUBLIC ./std_bot/connection)
 
 target_link_libraries(test_lib pthread)
 target_link_libraries(test_lib stdc++fs)
+
+set_property(TARGET test_lib PROPERTY CXX_STANDARD 20)

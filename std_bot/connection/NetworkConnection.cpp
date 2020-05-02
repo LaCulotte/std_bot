@@ -29,8 +29,7 @@ sp<MessageDataBuffer> NetworkConnection::readData(int length){
             disconnect();
             return ret;
         }
-        //TODO : ajouter la gestion du pending
-        ret = make_shared<MessageDataBuffer>(data, recv);
+        ret = make_shared<MessageDataBuffer>(data, recv_len);
     }
 
     return ret;

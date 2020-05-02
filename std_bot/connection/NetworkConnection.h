@@ -14,8 +14,6 @@ public:
     virtual NetworkConnection& operator=(const NetworkConnection& other); 
     virtual ~NetworkConnection();
 
-    // virtual sp<Message> readMessage();
-
     virtual void disconnect() { close(socket); };
 
     void setSocket(int sock) { socket = sock; };
@@ -23,14 +21,13 @@ public:
 
     virtual bool isThereMessage();
 
+    virtual void temp() override { cout << "Network connection" << endl; };
 // private:
 public:
     int socket;
     string connectedAddress;
 
-    // Max number of bytes to read in one take
-    // If the message is longer, will wait before reading the rest
-    static const int maxReadLength = 0; 
+    void emptySocketBuffer() {};
 
     //    v  : wtf is that even supposed to mean
     // (Read?) File descriptor set, used with select, the function to tell if
@@ -40,13 +37,6 @@ public:
     // Timeout for select, the function to tell if there is data to read
     // in the socket
     const timeval selectTimeout = {0, 0};
-
-    bool isPending = false;
-    sp<MessageDataBuffer> pendingData;
-    int pendingDataFinalLength;
-    timeval timeLastPendingUpdate;
-    timeval maxTimeBetweenPendingUpdates;
-
 
     virtual bool writeData(sp<MessageDataBuffer> data);
     virtual sp<MessageDataBuffer> readData(int length);
