@@ -1,6 +1,5 @@
 #include "std_bot/dataContainers/DataBuffer.h"
 #include "std_bot/dataContainers/MessageDataBuffer.h"
-#include "std_bot/messaging/DofusNetworkMessage.h"
 #include "std_bot/messaging/MessageInterface.h"
 #include "std_bot/test_class/RawMessage.h"
 #include "std_bot/logger/Logger.h"
@@ -105,55 +104,58 @@ int main() {
     MessageDataBuffer mdb2;
     mdb2 = mdb;
 
-    int sock;
-    sockaddr_in addr_in;
-    int addrlen = sizeof(addr_in);
-    int opt = 1;
+    // int sock;
+    // sockaddr_in addr_in;
+    // int addrlen = sizeof(addr_in);
+    // int opt = 1;
 
-    if(sock = socket(AF_INET, SOCK_STREAM, 0)){
-        cout << "Socket contruit" << endl;
-    } else {
-        cout << "Erreur de construction du socket" << endl;
-        return -1;
-    }
+    // if(sock = socket(AF_INET, SOCK_STREAM, 0)){
+    //     cout << "Socket contruit" << endl;
+    // } else {
+    //     cout << "Erreur de construction du socket" << endl;
+    //     return -1;
+    // }
 
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(8080);
+    // addr_in.sin_family = AF_INET;
+    // addr_in.sin_port = htons(8080);
 
-    if(inet_pton(AF_INET, "127.0.0.1", &addr_in.sin_addr)<=0){
-        cout << "Adresse invalide" << endl;
-        return -1;
-    }
+    // if(inet_pton(AF_INET, "127.0.0.1", &addr_in.sin_addr)<=0){
+    //     cout << "Adresse invalide" << endl;
+    //     return -1;
+    // }
 
-    if(connect(sock, (sockaddr *) &addr_in, sizeof(sockaddr)) < 0){
-        cout << "Impossible de se connecter" << endl;
-        return -1;
-    } else {
-        cout << "Le client est connecté" << endl;
-    }
+    // if(connect(sock, (sockaddr *) &addr_in, sizeof(sockaddr)) < 0){
+    //     cout << "Impossible de se connecter" << endl;
+    //     return -1;
+    // } else {
+    //     cout << "Le client est connecté" << endl;
+    // }
 
     NetworkConnection conn;
     conn.connected = true;
     conn.connectedAddress = "localhost";
-    conn.socket = sock;
+    // conn.socket = sock;
 
-    sp<MessageDataBuffer> data(nullptr);
-    while(!data){
-        data = conn.readData(22);
-    }
+    // sp<MessageDataBuffer> data(nullptr);
+    // while(!data){
+    //     data = conn.readData(22);
+    // }
 
-    cout << data->toCharArray() << endl;
+    // cout << data->toCharArray() << endl;
 
-    string s_send = "Salutttttt !";
-    sp<MessageDataBuffer> mdb_send(new MessageDataBuffer((char *) s_send.c_str(), s_send.size()));
-    mdb_send->cursor_reset();
+    // string s_send = "Salutttttt !";
+    // sp<MessageDataBuffer> mdb_send(new MessageDataBuffer((char *) s_send.c_str(), s_send.size()));
+    // mdb_send->cursor_reset();
 
-    sleep(1);
+    // sleep(1);
 
-    if(!conn.writeData(mdb_send)){
-        Logger::write("Erreur d'envoi du msg", LOG_IMPORTANT_WARNING); 
-        return -1;
-    }
+    // if(!conn.writeData(mdb_send)){
+    //     Logger::write("Erreur d'envoi du msg", LOG_IMPORTANT_WARNING); 
+    //     return -1;
+    // }
+
+    sp<Connection> c2 = make_shared<NetworkConnection>();
+    c2->temp();
 
     Logger::endInstance();
     return 0;
@@ -161,6 +163,8 @@ int main() {
 
 /*
 TODO:
+
+Completer tous les TODO
 
 Rendre les classes abstraites totalement abstraites => fonctions purement virutelles
 Commentaires
