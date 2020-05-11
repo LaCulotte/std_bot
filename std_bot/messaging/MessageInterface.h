@@ -30,6 +30,7 @@ protected:
     
     // void retreivePending();
     // bool sendToPending(sp<Message> &message);
+
 };
 
 #endif

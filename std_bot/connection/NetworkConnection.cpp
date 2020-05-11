@@ -28,6 +28,12 @@ sp<MessageDataBuffer> NetworkConnection::readData(int length){
             Logger::write("Error while reading data from " + connectedAddress + " : connection was closed.", LOG_WARNING);
             disconnect();
             return ret;
+        } else if (recv_len > length) {
+            Logger::write("Big error while reading data : somehow read more data than intended. Actual read length : " + to_string(recv_len) + "; Intended read length :" + to_string(length) + ";", LOG_ERROR);
+            
+            assert(false);
+            
+            return ret;
         }
         ret = make_shared<MessageDataBuffer>(data, recv_len);
     }

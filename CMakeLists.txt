@@ -9,8 +9,12 @@ set(SRCS
     std_bot/dataContainers/MessageDataBuffer.cpp
     std_bot/messaging/MessageInterface.cpp
     std_bot/connection/NetworkConnection.cpp
+    std_bot/connection/PrefixNetworkConnection.cpp
     std_bot/test_class/RawMessage.cpp
     std_bot/test_class/ReadFrame.cpp
+    std_bot/test_class/BasicPrefixConnection.cpp
+    std_bot/test_class/BasicPrefixedMessage.cpp
+    std_bot/test_class/BasicMessageHandler.cpp
     test_lib.cpp
 )
 

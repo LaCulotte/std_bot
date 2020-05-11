@@ -3,7 +3,6 @@
 
 #include "Connection.h"
 #include "socket_include.h"
-#include "time_include.h"
 #include "Logger.h"
 
 class NetworkConnection : public Connection {
@@ -14,7 +13,7 @@ public:
     virtual NetworkConnection& operator=(const NetworkConnection& other); 
     virtual ~NetworkConnection();
 
-    virtual void disconnect() { close(socket); };
+    virtual void disconnect() { close(socket); connected = false; };
 
     void setSocket(int sock) { socket = sock; };
     void setConnect() { connected = true; }
@@ -27,6 +26,7 @@ public:
     int socket;
     string connectedAddress;
 
+    // TODO
     void emptySocketBuffer() {};
 
     //    v  : wtf is that even supposed to mean

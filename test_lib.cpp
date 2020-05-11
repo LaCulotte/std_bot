@@ -9,6 +9,9 @@
 #include "thread_include.h"
 #include "time_include.h"
 #include "socket_include.h"
+#include "std_bot/connection/PrefixNetworkConnection.h"
+#include "BasicPrefixConnection.h"
+#include "BasicPrefixedMessage.h"
 
 #include <netinet/in.h>
 #include <unistd.h>
@@ -104,38 +107,51 @@ int main() {
     MessageDataBuffer mdb2;
     mdb2 = mdb;
 
-    // int sock;
-    // sockaddr_in addr_in;
-    // int addrlen = sizeof(addr_in);
-    // int opt = 1;
+    int sock;
+    sockaddr_in addr_in;
+    int addrlen = sizeof(addr_in);
+    int opt = 1;
 
-    // if(sock = socket(AF_INET, SOCK_STREAM, 0)){
-    //     cout << "Socket contruit" << endl;
-    // } else {
-    //     cout << "Erreur de construction du socket" << endl;
-    //     return -1;
-    // }
+    if(sock = socket(AF_INET, SOCK_STREAM, 0)){
+        cout << "Socket contruit" << endl;
+    } else {
+        cout << "Erreur de construction du socket" << endl;
+        return -1;
+    }
 
-    // addr_in.sin_family = AF_INET;
-    // addr_in.sin_port = htons(8080);
+    addr_in.sin_family = AF_INET;
+    addr_in.sin_port = htons(8080);
 
-    // if(inet_pton(AF_INET, "127.0.0.1", &addr_in.sin_addr)<=0){
-    //     cout << "Adresse invalide" << endl;
-    //     return -1;
-    // }
+    if(inet_pton(AF_INET, "127.0.0.1", &addr_in.sin_addr)<=0){
+        cout << "Adresse invalide" << endl;
+        return -1;
+    }
 
-    // if(connect(sock, (sockaddr *) &addr_in, sizeof(sockaddr)) < 0){
-    //     cout << "Impossible de se connecter" << endl;
-    //     return -1;
-    // } else {
-    //     cout << "Le client est connecté" << endl;
-    // }
+    if(connect(sock, (sockaddr *) &addr_in, sizeof(sockaddr)) < 0){
+        cout << "Impossible de se connecter" << endl;
+        return -1;
+    } else {
+        cout << "Le client est connecté" << endl;
+    }
 
-    NetworkConnection conn;
+    BasicPrefixConnection conn;
     conn.connected = true;
     conn.connectedAddress = "localhost";
-    // conn.socket = sock;
+    conn.socket = sock;
 
+    chrono::seconds s(1);
+    chrono::system_clock::duration d = chrono::duration_cast<chrono::nanoseconds>(s);
+    conn.maxTimeBetweenPendingUpdates = &d;
+
+    sp<BasicPrefixedMessage> msg;
+
+    while(!msg){
+        msg = dynamic_pointer_cast<BasicPrefixedMessage>(conn.readMessage());
+    }
+
+    if(msg) {
+        cout << msg->getMessage() << endl;
+    }
     // sp<MessageDataBuffer> data(nullptr);
     // while(!data){
     //     data = conn.readData(22);
@@ -154,8 +170,16 @@ int main() {
     //     return -1;
     // }
 
-    sp<Connection> c2 = make_shared<NetworkConnection>();
+    sp<Connection> c2 = make_shared<Connection>();
     c2->temp();
+
+    MessageDataBuffer dat({1, 2, 3});
+    dat.print();
+    dat.insertDataSpace(3);
+    dat.write({4, 5, 6, 7});
+    dat.cursor_end();
+    dat.insertDataSpace(3);
+    dat.print();
 
     Logger::endInstance();
     return 0;
@@ -170,4 +194,8 @@ Rendre les classes abstraites totalement abstraites => fonctions purement virute
 Commentaires
 Documentation? => d'abord une implémentation
 
+Transmettre le TODO tout à la fin à l'implémentation
+
+TODO tout à la fin :
+enlever les assert(false) qui on servi au débug
 */

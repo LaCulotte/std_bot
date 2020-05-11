@@ -5,13 +5,13 @@
 
 class MessageTypeHandler {
 public:
-    MessageTypeHandler();
+    MessageTypeHandler() {};
     MessageTypeHandler(const MessageTypeHandler& other) = delete;
 
     MessageTypeHandler& operator=(const MessageTypeHandler& other) = delete;
-    virtual ~MessageTypeHandler();
+    virtual ~MessageTypeHandler() {};
 
-    virtual sp<Message> generateMessageById(int id) = 0;
+    virtual sp<Message> generateMessageById(int id) { return nullptr; };
 };
 
 #endif
