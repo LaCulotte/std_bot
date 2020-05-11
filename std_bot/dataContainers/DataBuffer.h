@@ -28,10 +28,13 @@ public:
     //Copy overload
     DataBuffer<T>& operator=(const DataBuffer<T> &other) { data = other.data; return *this; };
 
+    //TODO : remove?
     virtual void bfunc() {};
 
     //Clears data from buffer
     void clear();
+
+    //TODO : cleaner print
     void print();
 
     //Size of the buffer
@@ -71,10 +74,13 @@ public:
     //Reads all data
     vector<T> read_all() { return data; }
 
-    //Writes data at the right of the cursor
+    //Writes data on the right of the cursor
     void write(T dat);
-    //Writes data at the right of the cursor
+    //Writes data on the right of the cursor
     void write(vector<T> dat);
+
+    //Insert data space on the right of the cursor
+    void insertDataSpace(int n);
 
     //Pushes data at the end of the buffer
     void push(T dat) { data.push_back(dat); };
@@ -217,6 +223,18 @@ template<typename T>
 void DataBuffer<T>::write(vector<T> dat){
     for (T d : dat)
         write(d);
+}
+
+template<typename T>
+void DataBuffer<T>::insertDataSpace(int n){
+    if(n < 0){
+        Logger::write("Cannot insert negative ammount of data space.", LOG_WARNING);
+        return;
+    }
+
+    vector<T> inData(n, 0);
+    data.insert(data.begin() + cursor, inData.begin(), inData.end());
+    return;
 }
 
 template<typename T>
