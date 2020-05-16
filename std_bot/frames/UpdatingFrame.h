@@ -1,7 +1,9 @@
 #ifndef UPDATINGFRAME_H
 #define UPDATINGFRAME_H
 
+
 #include "Frame.h"
+#ifdef FINISHED_FRAME_H
 
 class UpdatingFrame : public Frame{
 public:
@@ -17,5 +19,7 @@ public:
 protected:
     bool alwaysUpdate = false;
 };
+
+#endif
 
 #endif

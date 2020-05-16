@@ -4,7 +4,9 @@
 #include "std_include.h"
 #include "ptr_include.h"
 #include "Message.h"
+#include "MessagingUnit.h"
 
+class MessagingUnit;
 class Frame{
 public:
     Frame() {};
@@ -15,8 +17,17 @@ public:
 
     virtual bool computeMessage(sp<Message> message) { return true; };
 
-private:
-    int id;
+    MessagingUnit* parent;
+    void setPriority(int p) { priority = p; };
+    int getPriority() { return priority; }; 
+
+protected:
+    // int id;
+
+    //The lower, the latter it will compute messages
+    int priority = 100;
 };
+
+#define FINISHED_FRAME_H
 
 #endif

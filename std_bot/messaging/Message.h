@@ -24,6 +24,8 @@ public:
 
     static const unsigned int protocolId = 0;
     
+    bool keepInLoop = false;
+    int lifetime = 0;
 };
 
 #endif
