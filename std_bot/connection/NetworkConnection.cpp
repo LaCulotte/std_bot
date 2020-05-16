@@ -15,15 +15,15 @@ NetworkConnection& NetworkConnection::operator=(const NetworkConnection& other){
 }
 
 NetworkConnection::~NetworkConnection(){
+    disconnect();
 }
-
 
 sp<MessageDataBuffer> NetworkConnection::readData(int length){
     sp<MessageDataBuffer> ret(nullptr);
 
     if (isThereMessage()) {
         char *data = (char *) malloc(length * sizeof(char));
-        int recv_len = recv(socket, data, length, 0);
+        int recv_len = recv(sock, data, length, 0);
         if(recv_len == 0){
             Logger::write("Error while reading data from " + connectedAddress + " : connection was closed.", LOG_WARNING);
             disconnect();
@@ -45,7 +45,7 @@ bool NetworkConnection::writeData(sp<MessageDataBuffer> data){
     if(!connected)
         return false;
 
-    int send_ret = send(socket, data->toCharArray(), data->size(), 0);
+    int send_ret = send(sock, data->toCharArray(), data->size(), 0);
 
     if(send_ret == -1){
         Logger::write("Error while sending data to " + connectedAddress + ".", LOG_WARNING);
@@ -66,8 +66,8 @@ bool NetworkConnection::isThereMessage(){
     if(!connected)
         return false;
         
-    FD_SET(socket, &rfd);
-    int sel_ret = select(socket + 1, &rfd, NULL, NULL, (timeval *) &selectTimeout);
+    FD_SET(sock, &rfd);
+    int sel_ret = select(sock + 1, &rfd, NULL, NULL, (timeval *) &selectTimeout);
 
     if(sel_ret < 0){
         Logger::write("Error on connection with " + connectedAddress + ". Closing connection.", LOG_IMPORTANT_WARNING);
@@ -77,4 +77,12 @@ bool NetworkConnection::isThereMessage(){
     }
 
     return (sel_ret > 0);
+}
+
+void NetworkConnection::emptySocketBuffer(){
+    while(isThereMessage()){
+        readData(1000);
+    }
+
+    return;
 }

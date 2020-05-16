@@ -13,9 +13,9 @@ public:
     virtual NetworkConnection& operator=(const NetworkConnection& other); 
     virtual ~NetworkConnection();
 
-    virtual void disconnect() { close(socket); connected = false; };
+    virtual void disconnect() { close(sock); connected = false; };
 
-    void setSocket(int sock) { socket = sock; };
+    void setSocket(int s) { sock = s; };
     void setConnect() { connected = true; }
 
     virtual bool isThereMessage();
@@ -23,11 +23,11 @@ public:
     virtual void temp() override { cout << "Network connection" << endl; };
 // private:
 public:
-    int socket;
+    int sock;
     string connectedAddress;
 
-    // TODO
-    void emptySocketBuffer() {};
+    // TODO : mettre en la taille 'lue' à chaque fois dans une variable?
+    void emptySocketBuffer();
 
     //    v  : wtf is that even supposed to mean
     // (Read?) File descriptor set, used with select, the function to tell if

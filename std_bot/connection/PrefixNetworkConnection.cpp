@@ -126,3 +126,31 @@ sp<Message> PrefixNetworkConnection::readMessage() {
         }
     }
 }
+
+vector<sp<Message>> PrefixNetworkConnection::readMessages(int n) {
+    vector<sp<Message>> ret;
+
+    sp<Message> msg = readMessage();
+    while(msg && ret.size() < n){
+        ret.push_back(msg);
+        msg = readMessage();
+    }
+
+    for(int i = ret.size(); i < n; i++){
+        ret.push_back(nullptr);
+    }
+
+    return ret;
+}
+
+vector<sp<Message>> PrefixNetworkConnection::readAllMessages() {
+    vector<sp<Message>> ret;
+
+    sp<Message> msg = readMessage();
+    while(msg){
+        ret.push_back(msg);
+        msg = readMessage();
+    }
+
+    return ret;
+}

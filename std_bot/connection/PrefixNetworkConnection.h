@@ -14,7 +14,7 @@
 // This mechanism loops until all the content is read or until the rest of the data does not arrives.
 // The latter is configured through the "maxTimeBetweenPendingUpdates" variable. 
 
-class PrefixNetworkConnection : public NetworkConnection {
+class PrefixNetworkConnection : public virtual NetworkConnection {
 public:
 
     PrefixNetworkConnection();
@@ -25,8 +25,10 @@ public:
     virtual ~PrefixNetworkConnection() = default;
 
     virtual sp<Message> readMessage() override;
-    // virtual vector<sp<Message>> readMessages(int n) override {};
-    // virtual vector<sp<Message>> readAllMessages() override {};
+    virtual vector<sp<Message>> readMessages(int n) override;
+    virtual vector<sp<Message>> readAllMessages() override;
+
+
 
 // protected:
 public:

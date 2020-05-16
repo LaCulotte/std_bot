@@ -5,7 +5,7 @@
 
 class ServerConnection : public virtual NetworkConnection {
 public:
-    ServerConnection();
+    virtual void onConnection() {};
 };
 
 #endif

@@ -3,7 +3,6 @@
 
 #include "std_include.h"
 #include "Logger.h"
-#include <vector>
 #include <type_traits>
 #include <assert.h>
 
