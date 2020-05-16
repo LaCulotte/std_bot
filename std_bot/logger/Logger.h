@@ -27,6 +27,7 @@ public:
     static string fullLogPath;
 private:
     Logger();
+    ~Logger();
 
     static Logger* logger;
     static string logPath;

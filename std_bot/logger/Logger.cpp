@@ -13,6 +13,10 @@ using namespace std;
 Logger::Logger(){
 }
 
+Logger::~Logger(){
+    endInstance();
+}
+
 void Logger::endInstance(){
     log.close();
 
@@ -30,16 +34,17 @@ void Logger::init(){
     time_t currentTime = time(NULL);
     tm *localCurrentTime = localtime(&currentTime);
 
-    log.open(logPath + "/logs/log"  \
-            + "_" + to_string(localCurrentTime->tm_hour) \
-            + ":" + to_string(localCurrentTime->tm_min) \
-            + ":" + to_string(localCurrentTime->tm_sec) \
-            + "_" + to_string(localCurrentTime->tm_mday) \
-            + "-" + to_string(localCurrentTime->tm_mon) \
-            + "-" + to_string(localCurrentTime->tm_year%100) \
-            + ".txt");
+    // log.open(logPath + "/logs/log"  \
+    //         + "_" + to_string(localCurrentTime->tm_hour) \
+    //         + ":" + to_string(localCurrentTime->tm_min) \
+    //         + ":" + to_string(localCurrentTime->tm_sec) \
+    //         + "_" + to_string(localCurrentTime->tm_mday) \
+    //         + "-" + to_string(localCurrentTime->tm_mon) \
+    //         + "-" + to_string(localCurrentTime->tm_year%100) \
+    //         + ".txt");
 
     fullLogPath = logPath + "/logs/log" + "_" + to_string(localCurrentTime->tm_hour) + ":" + to_string(localCurrentTime->tm_min) + ":" + to_string(localCurrentTime->tm_sec) + "_" + to_string(localCurrentTime->tm_mday) + "-" + to_string(localCurrentTime->tm_mon) + "-" + to_string(localCurrentTime->tm_year%100) + ".txt";
+    log.open(fullLogPath);
 }
 
 void Logger::write(string str, string type){
