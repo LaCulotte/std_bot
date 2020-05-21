@@ -5,6 +5,8 @@
 
 class ClientConnection : public virtual NetworkConnection {
 public: 
+    ClientConnection() : NetworkConnection() {connectionKey = " ClientConnection "; };
+
     virtual bool connectTo(string address, int port);
     
 };

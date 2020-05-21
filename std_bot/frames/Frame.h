@@ -15,13 +15,17 @@ public:
     virtual ~Frame() = default;
     virtual Frame& operator=(const Frame &other) = default;
 
-    virtual bool computeMessage(sp<Message> message) { return true; };
+    virtual bool computeMessage(sp<Message> message, int srcKey) { return true; };
 
-    MessagingUnit* parent;
+    void setParent(MessagingUnit* p) { parent = p; };
+    void resetParent() { parent = nullptr; };
+    MessagingUnit * getParent() { return parent; };
+
     void setPriority(int p) { priority = p; };
     int getPriority() { return priority; }; 
 
 protected:
+    MessagingUnit* parent;
     // int id;
 
     //The lower, the latter it will compute messages

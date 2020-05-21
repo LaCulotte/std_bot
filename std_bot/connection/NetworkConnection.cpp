@@ -2,6 +2,8 @@
 
 NetworkConnection::NetworkConnection(){
     FD_ZERO(&rfd);
+
+    connectionKey = "NetworkConnection";
 }
 
 NetworkConnection::NetworkConnection(const NetworkConnection& other){

@@ -9,9 +9,9 @@
 class Connection{
 public:
     Connection() {};
-    Connection(const Connection& other) {};
+    Connection(const Connection& other) { connectionKey = other.connectionKey; };
 
-    virtual Connection& operator=(const Connection& other) = default;
+    virtual Connection& operator=(const Connection& other) { connectionKey = other.connectionKey; return *this; };
     virtual ~Connection() = default;
 
     virtual void initHandler() {}; 
@@ -38,6 +38,7 @@ public:
 
     virtual bool isConnected() { return connected; };
 
+    string connectionKey = "BasicConnection";
 // protected:
 public:
     bool connected = false;

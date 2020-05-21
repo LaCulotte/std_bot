@@ -16,6 +16,8 @@
 #include "WorkingUnit.h"
 #include "MessagingUnit.h"
 #include "OtherUselessFrame.h"
+#include "ConnectionUnit.h"
+
 
 #include <netinet/in.h>
 #include <unistd.h>
@@ -148,6 +150,8 @@ int main() {
     sp<MessagingUnit> msgUnit1(new MessagingUnit());
     sp<MessagingUnit> msgUnit2(new MessagingUnit());
 
+    // Faire des tests avec MessageInterface::destination et sécuriser un peu tout ca
+    // Dans MessagingUnit::~MessagingUnit() -> vérifier que l'on est bien la destination de msgInterface_in avant de mettre à nullptr
     MessagingUnit::link(msgUnit1, msgUnit2);
 
     sp<Frame> fr1(new ReadFrame());
@@ -160,27 +164,28 @@ int main() {
     msgUnit2->addFrame(fr3);
     msgUnit2->addFrame(ufr2);
 
-    sp<thread> tt1 = msgUnit1->launch();
-    sp<thread> tt2 = msgUnit2->launch();
+    cout << fr1.use_count() << endl;
+
+    msgUnit1->launch().get();
+    msgUnit2->launch().get();
 
     sp<Message> msg(new RawMessage());
-    msgUnit1->msgInterface_in->send(msg);
+    msgUnit1->sendSelfMessage(msg);
 
     usleep(1000);
-
 
     msgUnit1->stop();
     msgUnit2->stop();
 
-    tt1->join();
-    tt2->join();
+    msgUnit1->waitThreadEnd();
+    msgUnit2->waitThreadEnd();
 
     cout << "fr1 : " << fr1 << endl;
     cout << "fr2 : " << fr2 << endl;
     cout << "fr3 : " << fr3 << endl;
     cout << "ufr2 : " << ufr2 << endl;
 
-    cout << msgUnit1->getFrame<ReadFrame>() << endl;
+    cout << msgUnit1->popFrame<ReadFrame>() << endl;
     cout << msgUnit1->getFrame<OtherUselessFrame>() << endl;
     vector<sp<Frame>> frs = msgUnit2->getFrames<OtherUselessFrame>(2);
     for(sp<Frame> f : frs)
@@ -193,6 +198,7 @@ int main() {
 
     chrono::seconds s(1);
     chrono::system_clock::duration d = chrono::duration_cast<chrono::nanoseconds>(s);
+
     // conn.maxTimeBetweenPendingUpdates = &d;
 
     // WorkingUnit work;

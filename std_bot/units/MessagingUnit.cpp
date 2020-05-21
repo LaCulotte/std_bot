@@ -1,12 +1,24 @@
 #include "MessagingUnit.h"
 
 MessagingUnit::MessagingUnit(){
-    msgInterface_in = make_shared<MessageInterface>(); 
+    msgInterfaceExtern = make_shared<MessageInterface>();
+    msgInterfaceExtern->destination = this;
 }
 
 MessagingUnit::~MessagingUnit(){
     for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end(); it++)
-        it->second->parent = nullptr;
+        if(it->second->getParent() == this)
+            it->second->resetParent();
+
+    for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){
+        it->second[0]->destination = nullptr;
+        //Send disconnect message?
+        free(it->second);
+    }
+
+    if(msgInterfaceExtern)
+        msgInterfaceExtern->destination = nullptr;
+
 }
 
 bool MessagingUnit::addFrame(sp<Frame> frame, bool alwaysUpdates){ 
@@ -22,7 +34,7 @@ bool MessagingUnit::addFrame(sp<Frame> frame, bool alwaysUpdates){
             alwaysUptadingFrames.push_back(upFrame);
     }
 
-    frame->parent = this;
+    frame->setParent(this);
 
     return true;
 }
@@ -96,52 +108,70 @@ vector<Frame *> MessagingUnit::removeFrames(vector<Frame *> frames, bool with_nu
     return retFrames;
 }
 
-bool MessagingUnit::canAddMessagingUnit(sp<MessagingUnit> otherMU){
-    return (msgInterfaces_out.find(otherMU->messagingUnitKey) == msgInterfaces_out.end());
-}
+int MessagingUnit::addMessagingUnit(sp<MessageInterface> interface_in, sp<MessageInterface> interface_out){
+    if(!interface_in || !interface_out)
+        return -1;
 
-bool MessagingUnit::addMessagingUnit(sp<MessagingUnit> otherMU){
-    int old_size = msgInterfaces_out.size();
-    msgInterfaces_out.insert(pair<string, sp<MessageInterface>>(otherMU->messagingUnitKey, otherMU->msgInterface_in));
+    sp<MessageInterface> *itPair = (sp<MessageInterface>*) calloc(2, sizeof(sp<MessageInterface>));
+    itPair[0] = interface_in;
+    itPair[1] = interface_out;
+    msgInterfaces.insert(pair<int, sp<MessageInterface>*>(lastMsgInterfaceOutId++, itPair));
 
-    return old_size != msgInterfaces_out.size();
+    return lastMsgInterfaceOutId - 1;
 }
 
 bool MessagingUnit::link(sp<MessagingUnit> mu1, sp<MessagingUnit> mu2){
-    if(mu1->canAddMessagingUnit(mu2) && mu2->canAddMessagingUnit(mu1)){
-        mu1->addMessagingUnit(mu2);
-        mu2->addMessagingUnit(mu1);
+    if(!mu1 || !mu2)
+        return false;
+    
+    sp<MessageInterface> in1out2 (new MessageInterface());
+    sp<MessageInterface> in2out1 (new MessageInterface());
 
-        return true;
-    }
+    mu1->addMessagingUnit(in1out2, in2out1);
+    mu2->addMessagingUnit(in2out1, in1out2);
 
-    return false;
-}
-
-bool MessagingUnit::sendSelfMessage(sp<Message> message){
-    msgInterface_in->send(message);
     return true;
 }
 
-bool MessagingUnit::sendMessage(sp<Message> message, string destKey){
-    if(msgInterfaces_out.find(destKey) != msgInterfaces_out.end()){
-        weak_ptr<MessageInterface> w_out = msgInterfaces_out.at(destKey);
+bool MessagingUnit::sendSelfMessage(sp<Message> message){
+    msgInterfaceExtern->send(message);
+    return true;
+    // return false;
+}
 
-        if(!w_out.expired()){
-            sp<MessageInterface> out = w_out.lock();
+bool MessagingUnit::sendMessage(sp<Message> message, int destKey){
 
+    if(msgInterfaces.find(destKey) != msgInterfaces.end()){
+        sp<MessageInterface> out = msgInterfaces.at(destKey)[1];
+
+        if(out && out->destination) {
             out->send(message);
             return true;
-        }
+        } else {
+            msgInterfaces.erase(destKey);
+        }  
     }
 
     return false;
 }
 
 void MessagingUnit::retreiveMessages(){
-    vector<sp<Message>> messages = msgInterface_in->receive();
 
-    messagesToProcess.insert(messagesToProcess.end(), messages.begin(), messages.end());    
+    for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++) {
+       if(it->second[0] && it->second[1] && it->second[1]->destination){
+            vector<sp<Message>> messages = it->second[0]->receive();
+            for(sp<Message> m : messages)
+                messagesToProcess.push_back(pair(it->first, m));
+
+        } else {
+            msgInterfaces.erase(it);
+        }
+    }
+
+    if(msgInterfaceExtern)
+        for(sp<Message> msg : msgInterfaceExtern->receive())
+            messagesToProcess.push_back(pair(-1, msg));
+
 }
 
 void MessagingUnit::tick(){
@@ -150,14 +180,17 @@ void MessagingUnit::tick(){
     unordered_set<sp<UpdatingFrame>> toUpdateFrames;
 
     for(int i = 0; i < messagesToProcess.size(); i++){
-        sp<Message> message = messagesToProcess[i];
+        sp<Message> message = messagesToProcess[i].second;
         message->keepInLoop = false;
-        for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end(); it++){
-            if(it->second->computeMessage(message)) {
+
+        for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end(); it++) {
+            if(it->second->computeMessage(message, messagesToProcess[i].first)) {
                 if(dynamic_pointer_cast<UpdatingFrame>(it->second))
                     toUpdateFrames.insert(dynamic_pointer_cast<UpdatingFrame>(it->second));
+
                 if(!message->keepInLoop)
                     break;
+
                 message->keepInLoop = false;
             }
         }            
@@ -174,3 +207,23 @@ void MessagingUnit::tick(){
     for(unordered_set<sp<UpdatingFrame>>::iterator it = toUpdateFrames.begin(); it != toUpdateFrames.end(); it++)
         (*it)->update(); 
 }
+
+// void MessagingUnit::cleanAllArrays() {
+//     for(auto it = frames.begin(); it != frames.end(); it++){
+//         if(!it->second){
+//             frames.erase(it);
+//             it--;
+
+//             auto a_it = addedFrames.find(it->second);
+//             if(a_it != addedFrames.end())
+//                 addedFrames.erase(a_it);
+//         }
+//     }
+
+//     for(int i = 0; i < alwaysUptadingFrames.size(); i++){
+//         if(!alwaysUptadingFrames[i]){
+//             alwaysUptadingFrames.erase(alwaysUptadingFrames.begin() + i);
+//             i--;
+//         }
+//     }
+// }

@@ -14,6 +14,7 @@ set(SRCS
     std_bot/connection/ListeningServer.cpp
     std_bot/units/WorkingUnit.cpp
     std_bot/units/MessagingUnit.cpp
+    std_bot/units/ConnectionUnit.cpp
     std_bot/test_class/RawMessage.cpp
     std_bot/test_class/ReadFrame.cpp
     std_bot/test_class/OtherUselessFrame.cpp

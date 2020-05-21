@@ -10,6 +10,7 @@
 
 class Frame;
 class UpdatingFrame;
+class MessageInterface;
 
 // Does not mean that it communicates throught network. It communicates with other MessagingUnits
 class MessagingUnit : public WorkingUnit {
@@ -20,7 +21,7 @@ public :
     virtual MessagingUnit& operator=(const MessagingUnit& other) = default;
     virtual ~MessagingUnit();
 
-    void initFrames() {};
+    virtual void initFrames() {};
     bool addFrame(sp<Frame> frame, bool alwaysUpdates = false);
 
     template<typename T>
@@ -45,9 +46,18 @@ public :
     static bool link(sp<MessagingUnit> mu1, sp<MessagingUnit> mu2);
 
     bool sendSelfMessage(sp<Message> message);
-    bool sendMessage(sp<Message> message, string destKey);
+    bool sendMessage(sp<Message> message, int destId);
 
-    sp<MessageInterface> msgInterface_in;
+    template<typename T>
+    int getMessageInterfaceOutId();
+    template<typename T>
+    int getMessageInterfaceOutId(bool filter(sp<T>));
+    template<typename T>
+    vector<int> getAllMessageInterfaceOutIds();
+    template<typename T>
+    vector<int> getAllMessageInterfaceOutIds(bool filter(sp<T>));
+
+    string messagingUnitKey = "BasicMessagingUnit";
 protected:
 
     virtual void tick() override;
@@ -57,20 +67,18 @@ protected:
     vector<sp<UpdatingFrame>> alwaysUptadingFrames;  
     void removeFrameFromArrays(multimap<int, sp<Frame>>::iterator itr);  
 
-    vector<sp<Message>> messagesToProcess;
+    vector<pair<int, sp<Message>>> messagesToProcess;
 
     int maxMessageLifetime = 1;
 
-    bool canAddMessagingUnit(sp<MessagingUnit> otherMU);
-    bool addMessagingUnit(sp<MessagingUnit> otherMU);
-    unordered_map<string, weak_ptr<MessageInterface>> msgInterfaces_out;
+    int addMessagingUnit(sp<MessageInterface> interface_in, sp<MessageInterface> interface_out);
+    int lastMsgInterfaceOutId = 0;
+    // unordered_map<int, weak_ptr<MessageInterface>> msgInterfaces_out;
+    sp<MessageInterface> msgInterfaceExtern;
+    // paires : id -> sp<MessageInterface>[2] = {in, out}
+    unordered_map<int, sp<MessageInterface>*> msgInterfaces;
 
     void retreiveMessages();
-
-    string messagingUnitKey = "BasicMessagingUnit";
-
-    void initSelfPointer();
-    sp<MessagingUnit> selfPointer;
 };
 
 template<typename T>
@@ -87,18 +95,14 @@ sp<Frame> MessagingUnit::popFrame(){
 
 template<typename T>
 vector<sp<Frame>> MessagingUnit::popFrames(int n){
-    vector<multimap<int, sp<Frame>>::iterator> delIterators;
-
-    for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end() && delIterators.size() < n; it++){
-        if(dynamic_pointer_cast<T>(it->second)) {
-            delIterators.push_back(it);
-        }
-    }
-
     vector<sp<Frame>> ret;
-    for(auto it : delIterators){
-        removeFrameFromArrays(it);
-        ret.push_back(it->second);
+
+    for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end() && ret.size() < n; it++){
+        if(dynamic_pointer_cast<T>(it->second)) {
+            ret.push_back(it->second);
+            removeFrameFromArrays(it);
+            it--;
+        }
     }
 
     while(ret.size() < n)
@@ -109,18 +113,15 @@ vector<sp<Frame>> MessagingUnit::popFrames(int n){
 
 template<typename T>
 vector<sp<Frame>> MessagingUnit::popAllFrames(){
-    vector<multimap<int, sp<Frame>>::iterator> delIterators;
+    vector<sp<Frame>> ret;
 
     for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end(); it++){
         if(dynamic_pointer_cast<T>(it->second)) {
-            delIterators.push_back(it);
+            // delIterators.push_back(it);
+            ret.push_back(it->second);
+            removeFrameFromArrays(it);
+            it--;
         }
-    }
-
-    vector<sp<Frame>> ret;
-    for(auto it : delIterators){
-        removeFrameFromArrays(it);
-        ret.push_back(it->second);
     }
 
     return ret;
@@ -162,5 +163,59 @@ vector<sp<Frame>> MessagingUnit::getAllFrames(){
 
     return ret;
 }
+
+#ifdef END_MESSAGEINTERFACE_H
+
+template<typename T>
+int MessagingUnit::getMessageInterfaceOutId(){
+    for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){
+        if(it->second[1] && dynamic_cast<T *>(it->second[1]->destination))
+            return it->first;
+    }
+
+    return -1;
+}
+
+template<typename T>
+int MessagingUnit::getMessageInterfaceOutId(bool filter(sp<T>)){
+    for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){
+        if(it->second[1]){
+            sp<T> T_cast = dynamic_cast<T *>(it->second[1]->destination);
+            if(T_cast && filter(T_cast))
+                return it->first;
+        }
+    }
+
+    return -1;
+}
+
+template<typename T>
+vector<int> MessagingUnit::getAllMessageInterfaceOutIds(){
+    vector<int> ret;
+
+    for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){
+        if(it->second[1] && dynamic_cast<T *>(it->second[1]->destination))
+            ret.push_back(it->first);
+    }
+
+    return ret;
+}
+
+template<typename T>
+vector<int> MessagingUnit::getAllMessageInterfaceOutIds(bool filter(sp<T>)){
+    vector<int> ret;
+
+    for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){
+        if(it->second[1]){
+            sp<T> T_cast = dynamic_cast<T *>(it->second[1]->destination);
+            if(T_cast && filter(T_cast))
+                ret.push_back(it->first);
+        }
+    }
+
+    return ret;
+}
+
+#endif
 
 #endif

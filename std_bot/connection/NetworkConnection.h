@@ -16,6 +16,7 @@ public:
     virtual void disconnect() { close(sock); connected = false; };
 
     void setSocket(int s) { sock = s; };
+    //A enlever!!
     void setConnect() { connected = true; }
 
     virtual bool isThereMessage();

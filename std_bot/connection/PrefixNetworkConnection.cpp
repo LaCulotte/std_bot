@@ -2,6 +2,8 @@
 
 PrefixNetworkConnection::PrefixNetworkConnection() : NetworkConnection() {
     initHandler();
+
+    connectionKey = "PrefixConnection";
 }
 
 PrefixNetworkConnection::PrefixNetworkConnection(const PrefixNetworkConnection& other) : NetworkConnection(other) { 

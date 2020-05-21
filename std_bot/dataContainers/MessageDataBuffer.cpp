@@ -81,7 +81,7 @@ int MessageDataBuffer::readVarInt(){
 string MessageDataBuffer::readUTF(){
     string ret = "";
     int length = readShort();
-
+    
     for(int i = 0; i < length; i++){
         ret += read();
     }

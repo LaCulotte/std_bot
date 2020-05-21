@@ -15,6 +15,7 @@ public:
 
     virtual sp<thread> launch();
     virtual void stop() { run = false; };
+    virtual void waitThreadEnd() { loopThread->join(); };
 
 protected:
     sp<thread> loopThread;

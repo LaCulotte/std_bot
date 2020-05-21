@@ -74,6 +74,9 @@ bool MessageInterface::send(sp<Message> &message){
 // }
 
 vector<sp<Message>> MessageInterface::receive(){
+    if(!isThereMessages())
+        return {};
+
     unique_lock<timed_mutex> mainLock(mainMutex, defer_lock);
     vector<sp<Message>> ret;
 

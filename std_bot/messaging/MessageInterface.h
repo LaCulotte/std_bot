@@ -4,7 +4,9 @@
 #include "Message.h"
 #include "thread_include.h"
 #include "Logger.h"
+#include "MessagingUnit.h"
 
+class MessagingUnit;
 class MessageInterface{
 public:
     MessageInterface();
@@ -19,7 +21,7 @@ public:
     vector<sp<Message>> receive();  
     bool isThereMessages() { return (messageBuffer.size()) > 0; };
 
-//    weak_ptr<MessagingUnit> destination;
+   MessagingUnit* destination;
 
 protected:
     vector<sp<Message>> messageBuffer;
@@ -32,5 +34,7 @@ protected:
     // bool sendToPending(sp<Message> &message);
 
 };
+
+#define END_MESSAGEINTERFACE_H
 
 #endif
