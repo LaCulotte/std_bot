@@ -21,6 +21,7 @@ set(SRCS
     std_bot/test_class/BasicPrefixConnection.cpp
     std_bot/test_class/BasicPrefixedMessage.cpp
     std_bot/test_class/BasicMessageHandler.cpp
+    std_bot/test_class/ConnectionManagerFrame.cpp
     std_bot/std_include/socket_include.cpp
     test_lib.cpp
 )

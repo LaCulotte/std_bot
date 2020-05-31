@@ -17,14 +17,15 @@
 #include "MessagingUnit.h"
 #include "OtherUselessFrame.h"
 #include "ConnectionUnit.h"
-
+#include "BegConnectionMessage.h"
+#include "ConnectionManagerFrame.h"
 
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
 void send1(sp<MessageInterface> i){
-    sp<Message> rm = make_shared<RawMessage>();
+    sp<RawMessage> rm = make_shared<RawMessage>();
     sp<MessageDataBuffer> mdb = make_shared<MessageDataBuffer>();
     mdb->writeUTF("Fonction 1");
     mdb->cursor_reset();
@@ -35,7 +36,7 @@ void send1(sp<MessageInterface> i){
 }
 
 void send2(sp<MessageInterface> i){
-    sp<Message> rm = make_shared<RawMessage>();
+    sp<RawMessage> rm = make_shared<RawMessage>();
     sp<MessageDataBuffer> mdb = make_shared<MessageDataBuffer>();
     mdb->writeUTF("Fonction 2");
     mdb->cursor_reset();
@@ -44,7 +45,6 @@ void send2(sp<MessageInterface> i){
 
     i->send(rm);
 }
-
 
 int main() {
     Logger* l = Logger::getInstance();
@@ -89,7 +89,7 @@ int main() {
 
     for(sp<Message> m: messages){
         sp<MessageDataBuffer> out = make_shared<MessageDataBuffer>();
-        m->serialize(out);
+        dynamic_pointer_cast<NetworkMessage>(m)->serialize(out);
         out->cursor_reset();
         cout << out->readUTF() << endl;
     }
@@ -146,55 +146,67 @@ int main() {
     // conn.socket = sock;
     // conn.connectTo("127.0.0.1", 8080);
     
-
     sp<MessagingUnit> msgUnit1(new MessagingUnit());
-    sp<MessagingUnit> msgUnit2(new MessagingUnit());
+    sp<MessagingUnit> msgUnit2(new ConnectionUnit());
 
+    // TODO : test avec FromConnectionMessage -> vérifier qu'il est bien initialisé qd il faut
     // Faire des tests avec MessageInterface::destination et sécuriser un peu tout ca
     // Dans MessagingUnit::~MessagingUnit() -> vérifier que l'on est bien la destination de msgInterface_in avant de mettre à nullptr
     MessagingUnit::link(msgUnit1, msgUnit2);
 
     sp<Frame> fr1(new ReadFrame());
     sp<Frame> fr2(new ReadFrame());
-    sp<Frame> fr3(new ReadFrame());
+    // sp<Frame> fr3(new ReadFrame());
     sp<OtherUselessFrame> ufr2(new OtherUselessFrame());
+    sp<ConnectionManagerFrame> cmfr(new ConnectionManagerFrame());
     msgUnit1->addFrame(fr1);
-    msgUnit2->addFrame(fr2);
-    msgUnit2->addFrame(fr3);
-    msgUnit2->addFrame(fr3);
-    msgUnit2->addFrame(ufr2);
+    // msgUnit1->addFrame(ufr2);
 
-    cout << fr1.use_count() << endl;
+    msgUnit2->addFrame(fr2);
+    // msgUnit2->addFrame(fr3);
+    // msgUnit2->addFrame(fr3);
+    // msgUnit2->addFrame(ufr2);
+    msgUnit2->addFrame(cmfr);
+
+    // cout << fr1.use_count() << endl;
 
     msgUnit1->launch().get();
     msgUnit2->launch().get();
 
+    // msgUnit1->stop();
+    // msgUnit1->waitThreadEnd();
+    // msgUnit1.reset();
+
     sp<Message> msg(new RawMessage());
     msgUnit1->sendSelfMessage(msg);
 
-    usleep(1000);
+    // getchar();
+
+    usleep(1000 * 1000);
+
 
     msgUnit1->stop();
     msgUnit2->stop();
 
+    msgUnit2->removeMessageInterface(0);
     msgUnit1->waitThreadEnd();
     msgUnit2->waitThreadEnd();
 
-    cout << "fr1 : " << fr1 << endl;
-    cout << "fr2 : " << fr2 << endl;
-    cout << "fr3 : " << fr3 << endl;
-    cout << "ufr2 : " << ufr2 << endl;
+    // cout << "fr1 : " << fr1 << endl;
+    // cout << "fr2 : " << fr2 << endl;
+    // cout << "fr3 : " << fr3 << endl;
+    // cout << "ufr2 : " << ufr2 << endl;
 
-    cout << msgUnit1->popFrame<ReadFrame>() << endl;
-    cout << msgUnit1->getFrame<OtherUselessFrame>() << endl;
-    vector<sp<Frame>> frs = msgUnit2->getFrames<OtherUselessFrame>(2);
-    for(sp<Frame> f : frs)
-        cout << f << endl;
-    frs = msgUnit2->popAllFrames<ReadFrame>();
-    for(sp<Frame> f : frs)
-        cout << f << endl;
+    // cout << msgUnit1->popFrame<ReadFrame>() << endl;
+    // cout << msgUnit1->getFrame<OtherUselessFrame>() << endl;
+    // vector<sp<Frame>> frs = msgUnit2->getFrames<OtherUselessFrame>(2);
+    // for(sp<Frame> f : frs)
+    //     cout << f << endl;
+    // frs = msgUnit2->popAllFrames<ReadFrame>();
+    // for(sp<Frame> f : frs)
+    //     cout << f << endl;
 
-    ListeningServer ls(8080, 2);
+    // ListeningServer ls(8080, 2);
 
     chrono::seconds s(1);
     chrono::system_clock::duration d = chrono::duration_cast<chrono::nanoseconds>(s);
@@ -268,7 +280,7 @@ int main() {
     //     return -1;
     // }
 
-    sp<Connection> c2 = make_shared<Connection>();
+    sp<Connection> c2 = make_shared<NetworkConnection>();
     c2->temp();
 
     MessageDataBuffer dat({1, 2, 3});
@@ -289,6 +301,7 @@ TODO:
 
 Completer tous les TODO
 Rendre les remplissages d'arrays dans les fonctions du type removeFrames(int n) optionnels, en remplaçant avec une fonction du type removeFrames(int n, bool fill = false)
+Tester les constructeurs de copie, vérifier qu'ils copient ce qu'on veut. Si ce n'est pas le cas : les implémenter
 
 Commentaires
 Rendre les classes abstraites totalement abstraites => fonctions purement virutelles
