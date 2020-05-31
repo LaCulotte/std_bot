@@ -16,12 +16,12 @@ public:
 
     MessageInterface& operator=(const MessageInterface &other);
 
-    bool send(sp<Message> &message);
+    bool send(sp<Message> message);
 
     vector<sp<Message>> receive();  
     bool isThereMessages() { return (messageBuffer.size()) > 0; };
 
-   MessagingUnit* destination;
+   MessagingUnit* destination = nullptr;
 
 protected:
     vector<sp<Message>> messageBuffer;

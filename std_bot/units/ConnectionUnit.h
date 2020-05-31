@@ -5,6 +5,8 @@
 #include "Connection.h"
 #include "ClientConnection.h"
 #include "ServerConnection.h"
+//TODO : enlever ce truc
+#include "BasicPrefixConnection.h"
 
 class ConnectionUnit : public MessagingUnit {
 public:
@@ -14,9 +16,14 @@ public:
     virtual ConnectionUnit& operator=(const ConnectionUnit& other) = default;
     virtual ~ConnectionUnit() = default;
 
-    int connectToServer(string address, int port);
+    virtual int connectToServer(string address, int port, int sourceInterfaceKey = -1);
     // int HTTPConnection(string url);
-    int addConnection(sp<Connection> connection);
+    int addConnection(sp<Connection> connection, int sourceInterfaceKey = -1);
+
+    bool sendConnectionMessage(sp<ConnectionMessage> message, int destConnectionKey, int sourceInterfaceKey = -1);
+    bool changeConnectionDestination(int connectionKey, int newDestination);
+
+    void disconnect(int connectionKey);
 
     template<typename T>
     int getConnectionId();
@@ -30,11 +37,17 @@ public:
     virtual void initFrames() override;
     virtual void tick() override;
 
+    virtual bool removeMessageInterface(int interfaceKey) override;
+    virtual bool removeMessageInterface(unordered_map<int, sp<MessageInterface>*>::iterator interfaceIt) override;
+
 protected:
 
     unordered_map<int, sp<Connection>> connections;
     int lastConnectionId = 0;
 
+    unordered_map<int, int> connectionKey_to_interfaceKey;
+    // Changes when : sendMsg, connectToNewConnection, changeConnectionDestinationToIt
+    unordered_map<int, int> interfaceKey_to_preferredConnectionKey;
 };
 
 template<typename T>

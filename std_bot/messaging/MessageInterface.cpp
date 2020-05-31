@@ -40,7 +40,7 @@ MessageInterface::~MessageInterface(){
 * Here, we make sure that a thread have to complete the function in order to send or receive
 * messages. 
 */
-bool MessageInterface::send(sp<Message> &message){
+bool MessageInterface::send(sp<Message> message){
     unique_lock<timed_mutex> mainLock(mainMutex, defer_lock);
     if (mainLock.try_lock_for(chrono::milliseconds(10))){
         messageBuffer.push_back(message);

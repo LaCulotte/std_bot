@@ -17,7 +17,7 @@ public:
 
     virtual bool computeMessage(sp<Message> message, int srcKey) { return true; };
 
-    void setParent(MessagingUnit* p) { parent = p; };
+    virtual bool setParent(MessagingUnit* p) { parent = p; return true; };
     void resetParent() { parent = nullptr; };
     MessagingUnit * getParent() { return parent; };
 
@@ -25,7 +25,7 @@ public:
     int getPriority() { return priority; }; 
 
 protected:
-    MessagingUnit* parent;
+    MessagingUnit* parent = nullptr;
     // int id;
 
     //The lower, the latter it will compute messages

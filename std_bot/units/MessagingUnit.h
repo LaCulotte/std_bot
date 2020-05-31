@@ -57,6 +57,9 @@ public :
     template<typename T>
     vector<int> getAllMessageInterfaceOutIds(bool filter(sp<T>));
 
+    virtual bool removeMessageInterface(int interfaceKey);
+    virtual bool removeMessageInterface(unordered_map<int, sp<MessageInterface>*>::iterator interfaceIt);
+
     string messagingUnitKey = "BasicMessagingUnit";
 protected:
 

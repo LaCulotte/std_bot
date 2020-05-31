@@ -22,7 +22,10 @@ MessagingUnit::~MessagingUnit(){
 }
 
 bool MessagingUnit::addFrame(sp<Frame> frame, bool alwaysUpdates){ 
-    if(addedFrames.find(frame) != addedFrames.end())
+    if(!frame || addedFrames.find(frame) != addedFrames.end())
+        return false;
+
+    if(!frame->setParent(this))
         return false;
 
     addedFrames.insert(frame);
@@ -34,7 +37,6 @@ bool MessagingUnit::addFrame(sp<Frame> frame, bool alwaysUpdates){
             alwaysUptadingFrames.push_back(upFrame);
     }
 
-    frame->setParent(this);
 
     return true;
 }
@@ -112,12 +114,33 @@ int MessagingUnit::addMessagingUnit(sp<MessageInterface> interface_in, sp<Messag
     if(!interface_in || !interface_out)
         return -1;
 
+    interface_in->destination = this;
+
     sp<MessageInterface> *itPair = (sp<MessageInterface>*) calloc(2, sizeof(sp<MessageInterface>));
     itPair[0] = interface_in;
     itPair[1] = interface_out;
     msgInterfaces.insert(pair<int, sp<MessageInterface>*>(lastMsgInterfaceOutId++, itPair));
 
     return lastMsgInterfaceOutId - 1;
+}
+
+bool MessagingUnit::removeMessageInterface(int interfaceKey){
+    auto it = msgInterfaces.find(interfaceKey);
+    if(it != msgInterfaces.end()) {
+        removeMessageInterface(it);
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool MessagingUnit::removeMessageInterface(unordered_map<int, sp<MessageInterface>*>::iterator interfaceIt){
+    if(interfaceIt->second)
+        free(interfaceIt->second);
+    msgInterfaces.erase(interfaceIt);
+
+    return true;
 }
 
 bool MessagingUnit::link(sp<MessagingUnit> mu1, sp<MessagingUnit> mu2){
@@ -148,7 +171,7 @@ bool MessagingUnit::sendMessage(sp<Message> message, int destKey){
             out->send(message);
             return true;
         } else {
-            msgInterfaces.erase(destKey);
+            removeMessageInterface(destKey);
         }  
     }
 
@@ -158,13 +181,13 @@ bool MessagingUnit::sendMessage(sp<Message> message, int destKey){
 void MessagingUnit::retreiveMessages(){
 
     for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++) {
-       if(it->second[0] && it->second[1] && it->second[1]->destination){
+        if(it->second[0] && it->second[1] && it->second[1]->destination){
             vector<sp<Message>> messages = it->second[0]->receive();
             for(sp<Message> m : messages)
                 messagesToProcess.push_back(pair(it->first, m));
 
         } else {
-            msgInterfaces.erase(it);
+            removeMessageInterface(it);
         }
     }
 
