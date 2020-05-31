@@ -9,3 +9,6 @@ cmake_install.cmake
 logs
 Makefile
 std_bot/test_class
+std_bot/test_class/ReadFrame.h
+std_bot/test_class/ReadFrame.cpp
+std_bot/test_class/RawMessage.h
