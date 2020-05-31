@@ -24,15 +24,15 @@ public:
     virtual PrefixNetworkConnection& operator=(const PrefixNetworkConnection& other);
     virtual ~PrefixNetworkConnection() = default;
 
-    virtual sp<Message> readMessage() override;
-    virtual vector<sp<Message>> readMessages(int n) override;
-    virtual vector<sp<Message>> readAllMessages() override;
+    virtual sp<ConnectionMessage> readMessage() override;
+    virtual vector<sp<ConnectionMessage>> readMessages(int n) override;
+    virtual vector<sp<ConnectionMessage>> readAllMessages() override;
 
-
+    virtual bool sendMessage(sp<ConnectionMessage> message) override;
 
 // protected:
 public:
-
+    //TODO : rendre purement virtuelles
     virtual sp<MessageDataBuffer> readPrefix() { return nullptr; };
     virtual sp<PrefixedMessage> deserializePrefix(sp<MessageDataBuffer> data) { return nullptr; };
     virtual bool serializePrefix(sp<MessageDataBuffer> data, sp<PrefixedMessage> msg) = 0;

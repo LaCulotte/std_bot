@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include "ptr_include.h"
-#include "Message.h"
+#include "ConnectionMessage.h"
 #include "MessageTypeHandler.h"
 
 class Connection{
@@ -12,7 +12,7 @@ public:
     Connection(const Connection& other) { connectionKey = other.connectionKey; };
 
     virtual Connection& operator=(const Connection& other) { connectionKey = other.connectionKey; return *this; };
-    virtual ~Connection() = default;
+    virtual ~Connection() { this->disconnect(); };
 
     virtual void initHandler() {}; 
 
@@ -27,18 +27,21 @@ public:
     // In my opinion, you should use the first solution if the messages received are few and big, and you can handle losing some messages
     //                you should use the second solution if you have to (and can) make sure that you do not lose any message
 
-    virtual sp<Message> readMessage() { return nullptr; };
-    virtual vector<sp<Message>> readMessages(int n) { return vector<sp<Message>>(); };
-    virtual vector<sp<Message>> readAllMessages() { return vector<sp<Message>>(); };
+    //TODO : rendre fonctions purement virtuelles
+    virtual sp<ConnectionMessage> readMessage() { return nullptr; };
+    virtual vector<sp<ConnectionMessage>> readMessages(int n) { return vector<sp<ConnectionMessage>>(); };
+    virtual vector<sp<ConnectionMessage>> readAllMessages() { return vector<sp<ConnectionMessage>>(); };
 
-    virtual bool sendMessage(sp<Message> msg) { return false; };
+    virtual bool sendMessage(sp<ConnectionMessage> msg) { return false; };
     virtual bool isThereMessage() { return false; }; 
 
     virtual void temp() { cout << "Connection" << endl; };
 
     virtual bool isConnected() { return connected; };
 
-    string connectionKey = "BasicConnection";
+    virtual void disconnect() {};
+
+    string connectionKey = "Connection";
 // protected:
 public:
     bool connected = false;
@@ -56,7 +59,6 @@ public:
     virtual sp<Message> unwrapData(sp<MessageDataBuffer> data) { return nullptr; };
 
     sp<MessageTypeHandler> msgTypeHandler;
-
 };
 
 #endif

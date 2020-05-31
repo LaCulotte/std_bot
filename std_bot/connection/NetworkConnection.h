@@ -4,6 +4,7 @@
 #include "Connection.h"
 #include "socket_include.h"
 #include "Logger.h"
+#include "NetworkMessage.h"
 
 class NetworkConnection : public Connection {
 public:
@@ -13,7 +14,7 @@ public:
     virtual NetworkConnection& operator=(const NetworkConnection& other); 
     virtual ~NetworkConnection();
 
-    virtual void disconnect() { close(sock); connected = false; };
+    virtual void disconnect() override { Connection::disconnect(); close(sock); connected = false; };
 
     void setSocket(int s) { sock = s; };
     //A enlever!!

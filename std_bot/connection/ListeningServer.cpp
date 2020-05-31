@@ -100,14 +100,15 @@ void ListeningServer::listenLoop(){
 
 //TODO : supprimer cette fonction et laisser les classes enfant les implémenter
 sp<ServerConnection> ListeningServer::acceptConnection(int serverSocket){
-    sp<BasicPrefixConnection> newConnection( new BasicPrefixConnection());
+    // sp<BasicPrefixConnection> newConnection( new BasicPrefixConnection());
 
-    //TODO : mettre la vraie addresse
-    newConnection->connectedAddress = "localhost";
-    newConnection->connected = true;
-    newConnection->sock = serverSocket;
+    // //TODO : mettre la vraie addresse
+    // newConnection->connectedAddress = "localhost";
+    // newConnection->connected = true;
+    // newConnection->sock = serverSocket;
 
-    return newConnection;
+    // return newConnection;
+    return nullptr;
 }
 
 void ListeningServer::refuseConnection(int serverSocket){

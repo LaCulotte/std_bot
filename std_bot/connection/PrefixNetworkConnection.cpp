@@ -22,7 +22,7 @@ void PrefixNetworkConnection::resetPending(){
     pending = false;
 }
 
-sp<Message> PrefixNetworkConnection::readMessage() {
+sp<ConnectionMessage> PrefixNetworkConnection::readMessage() {
     if(!pending){
         sp<MessageDataBuffer> prefixData = readPrefix();
 
@@ -129,10 +129,10 @@ sp<Message> PrefixNetworkConnection::readMessage() {
     }
 }
 
-vector<sp<Message>> PrefixNetworkConnection::readMessages(int n) {
-    vector<sp<Message>> ret;
+vector<sp<ConnectionMessage>> PrefixNetworkConnection::readMessages(int n) {
+    vector<sp<ConnectionMessage>> ret;
 
-    sp<Message> msg = readMessage();
+    sp<ConnectionMessage> msg = readMessage();
     while(msg && ret.size() < n){
         ret.push_back(msg);
         msg = readMessage();
@@ -145,14 +145,27 @@ vector<sp<Message>> PrefixNetworkConnection::readMessages(int n) {
     return ret;
 }
 
-vector<sp<Message>> PrefixNetworkConnection::readAllMessages() {
-    vector<sp<Message>> ret;
+vector<sp<ConnectionMessage>> PrefixNetworkConnection::readAllMessages() {
+    vector<sp<ConnectionMessage>> ret;
 
-    sp<Message> msg = readMessage();
+    sp<ConnectionMessage> msg = readMessage();
     while(msg){
         ret.push_back(msg);
         msg = readMessage();
     }
 
     return ret;
+}
+
+//TODO : à enlever ou à implémenter de manière simple et indiquer qu'il faut masquer cette fonction
+bool PrefixNetworkConnection::sendMessage(sp<ConnectionMessage> message) {
+    sp<PrefixedMessage> prMessage = dynamic_pointer_cast<PrefixedMessage>(message);
+    if(!prMessage)
+        return false;
+
+    sp<MessageDataBuffer> output(new MessageDataBuffer());
+
+    prMessage->serialize(output);
+
+    return writeData(output);
 }
