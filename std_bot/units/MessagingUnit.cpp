@@ -5,6 +5,9 @@ MessagingUnit::MessagingUnit(){
     msgInterfaceExtern->destination = this;
 }
 
+void MessagingUnit::initFrames() {
+}
+
 MessagingUnit::~MessagingUnit(){
     for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end(); it++)
         if(it->second->getParent() == this)

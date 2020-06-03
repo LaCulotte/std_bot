@@ -7,6 +7,7 @@
 
 // Asks the ConnectionUnit to get the id of one or multiple connections
 class ConnectionIdGetMessage : public Message {
+public:
     // Contructor
     ConnectionIdGetMessage() {};
     // Constructor; Sets filter
@@ -17,7 +18,7 @@ class ConnectionIdGetMessage : public Message {
     // Copy operator
     virtual ConnectionIdGetMessage& operator=(const ConnectionIdGetMessage& other) = default;
     // Destructor
-    virtual ~ConnectionIdGetMessage();
+    virtual ~ConnectionIdGetMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; };

@@ -12,6 +12,7 @@ set(SRCS
     std_bot/connection/PrefixNetworkConnection.cpp
     std_bot/connection/ClientConnection.cpp
     std_bot/connection/ListeningServer.cpp
+    std_bot/frames/connectionFrames/BasicConnectionFrame.cpp
     std_bot/units/WorkingUnit.cpp
     std_bot/units/MessagingUnit.cpp
     std_bot/units/ConnectionUnit.cpp
@@ -32,8 +33,10 @@ target_include_directories(test_lib PUBLIC ./std_bot/std_include)
 target_include_directories(test_lib PUBLIC ./std_bot/dataContainers)
 target_include_directories(test_lib PUBLIC ./std_bot/logger)
 target_include_directories(test_lib PUBLIC ./std_bot/messaging)
+target_include_directories(test_lib PUBLIC ./std_bot/messaging/connectionMessages)
 target_include_directories(test_lib PUBLIC ./std_bot/test_class)
 target_include_directories(test_lib PUBLIC ./std_bot/frames)
+target_include_directories(test_lib PUBLIC ./std_bot/frames/connectionFrames)
 target_include_directories(test_lib PUBLIC ./std_bot/connection)
 target_include_directories(test_lib PUBLIC ./std_bot/units)
 

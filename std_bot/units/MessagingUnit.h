@@ -13,6 +13,9 @@ class UpdatingFrame;
 class MessageInterface;
 
 // Does not mean that it communicates throught network. It communicates with other MessagingUnits
+/**
+ *  
+ */
 class MessagingUnit : public WorkingUnit {
 public :
     MessagingUnit();
@@ -21,7 +24,7 @@ public :
     virtual MessagingUnit& operator=(const MessagingUnit& other) = default;
     virtual ~MessagingUnit();
 
-    virtual void initFrames() {};
+    virtual void initFrames();
     bool addFrame(sp<Frame> frame, bool alwaysUpdates = false);
 
     template<typename T>
@@ -79,6 +82,7 @@ protected:
     // unordered_map<int, weak_ptr<MessageInterface>> msgInterfaces_out;
     sp<MessageInterface> msgInterfaceExtern;
     // paires : id -> sp<MessageInterface>[2] = {in, out}
+    //TODO : changer en map ordonnée -> premiers éléments = éléments les plus vieux
     unordered_map<int, sp<MessageInterface>*> msgInterfaces;
 
     void retreiveMessages();

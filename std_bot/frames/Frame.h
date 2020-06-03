@@ -28,8 +28,9 @@ protected:
     MessagingUnit* parent = nullptr;
     // int id;
 
-    //The lower, the latter it will compute messages
-    int priority = 100;
+    // The lower, the latter it will compute messages 
+    // TODO : check si c'est pas l'inverse; check si possibilité d'être négatif (si oui le mentionner)
+    int priority = 0;
 };
 
 #define FINISHED_FRAME_H

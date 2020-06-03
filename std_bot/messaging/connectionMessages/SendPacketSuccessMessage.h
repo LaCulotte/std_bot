@@ -14,7 +14,7 @@ public:
     // Copy operator
     virtual SendPacketSuccessMessage& operator=(const SendPacketSuccessMessage& other) = default;
     // Destructor
-    virtual ~SendPacketSuccessMessage();
+    virtual ~SendPacketSuccessMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; }

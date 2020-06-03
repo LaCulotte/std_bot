@@ -5,6 +5,7 @@ ConnectionUnit::ConnectionUnit() : MessagingUnit() {
 }
 
 void ConnectionUnit::initFrames(){
+    addFrame(make_shared<BasicConnectionFrame>());
 }
 
 int ConnectionUnit::connectToServer(string address, int port, int sourceInterfaceKey){

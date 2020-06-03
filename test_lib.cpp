@@ -19,6 +19,9 @@
 #include "ConnectionUnit.h"
 #include "BegConnectionMessage.h"
 #include "ConnectionManagerFrame.h"
+#include "ConnectionRequestMessage.h"
+#include "GetConnectionFocusRequestMessage.h"
+#include "SendPacketRequestMessage.h"
 
 #include <netinet/in.h>
 #include <unistd.h>
@@ -148,11 +151,13 @@ int main() {
     
     sp<MessagingUnit> msgUnit1(new MessagingUnit());
     sp<MessagingUnit> msgUnit2(new ConnectionUnit());
+    sp<MessagingUnit> msgUnit3(new MessagingUnit());
 
     // TODO : test avec FromConnectionMessage -> vérifier qu'il est bien initialisé qd il faut
     // Faire des tests avec MessageInterface::destination et sécuriser un peu tout ca
     // Dans MessagingUnit::~MessagingUnit() -> vérifier que l'on est bien la destination de msgInterface_in avant de mettre à nullptr
     MessagingUnit::link(msgUnit1, msgUnit2);
+    MessagingUnit::link(msgUnit3, msgUnit2);
 
     sp<Frame> fr1(new ReadFrame());
     sp<Frame> fr2(new ReadFrame());
@@ -160,37 +165,55 @@ int main() {
     sp<OtherUselessFrame> ufr2(new OtherUselessFrame());
     sp<ConnectionManagerFrame> cmfr(new ConnectionManagerFrame());
     msgUnit1->addFrame(fr1);
+    msgUnit2->initFrames();
+    msgUnit3->addFrame(ufr2);
     // msgUnit1->addFrame(ufr2);
 
-    msgUnit2->addFrame(fr2);
+    // msgUnit2->addFrame(fr2);
     // msgUnit2->addFrame(fr3);
     // msgUnit2->addFrame(fr3);
     // msgUnit2->addFrame(ufr2);
-    msgUnit2->addFrame(cmfr);
+    // msgUnit2->addFrame(cmfr);
 
     // cout << fr1.use_count() << endl;
 
     msgUnit1->launch().get();
     msgUnit2->launch().get();
+    msgUnit3->launch().get();
 
     // msgUnit1->stop();
     // msgUnit1->waitThreadEnd();
     // msgUnit1.reset();
 
-    sp<Message> msg(new RawMessage());
-    msgUnit1->sendSelfMessage(msg);
+    // sp<Message> msg(new RawMessage());
+    // msgUnit1->sendSelfMessage(msg);
+
+    msgUnit1->sendMessage(make_shared<ConnectionRequestMessage>([](){return make_shared<BasicPrefixConnection>();}, "127.0.0.1", 8080), 0);
+    usleep(1000);
+    msgUnit1->sendMessage(make_shared<ConnectionIdGetMessage>([](sp<Connection> c){return (bool) dynamic_pointer_cast<BasicPrefixConnection>(c);}), 0);
+    usleep(1000);
+    msgUnit3->sendMessage(make_shared<GetConnectionFocusRequestMessage>([](sp<Connection> c){return (bool) dynamic_pointer_cast<BasicPrefixConnection>(c);}), 0);
+    // msgUnit3->sendMessage(make_shared<GetConnectionFocusRequestMessage>((vector<int>) {0}), 0);
+
+    // new GetConnectionFocusRequestMessage((vector<int>) {0});
 
     // getchar();
 
-    usleep(1000 * 1000);
-
+    usleep(1500 * 1000);
+    msgUnit1->sendMessage(make_shared<DisconnectRequestMessage>([](sp<Connection> c){return (bool) dynamic_pointer_cast<ClientConnection>(c);}), 0);
+    cout << "disconnect" << endl;
+    usleep(1500 * 1000);
 
     msgUnit1->stop();
     msgUnit2->stop();
+    msgUnit3->stop();
 
-    msgUnit2->removeMessageInterface(0);
+    // msgUnit2->removeMessageInterface(0);
     msgUnit1->waitThreadEnd();
     msgUnit2->waitThreadEnd();
+    msgUnit3->waitThreadEnd();
+
+    cout << "tout fermé" << endl;
 
     // cout << "fr1 : " << fr1 << endl;
     // cout << "fr2 : " << fr2 << endl;

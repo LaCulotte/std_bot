@@ -4,18 +4,19 @@
 #include "Message.h"
 
 // Tells that the focus was successfully gotten
-class DisconnectSuccessMessage : public Message {
+class DisconnectedMessage : public Message {
+public:
     // Contructor
-    DisconnectSuccessMessage() {};
+    DisconnectedMessage() {};
     // Constructor; with the ids of the connection that was disconnected
-    DisconnectSuccessMessage(vector<int> connectionIds) { this->connectionIds = connectionIds; };
+    DisconnectedMessage(vector<int> connectionIds) { this->connectionIds = connectionIds; };
     // Copy constuctor
-    DisconnectSuccessMessage(const DisconnectSuccessMessage& other) = default;
+    DisconnectedMessage(const DisconnectedMessage& other) = default;
 
     // Copy operator
-    virtual DisconnectSuccessMessage& operator=(const DisconnectSuccessMessage& other) = default;
+    virtual DisconnectedMessage& operator=(const DisconnectedMessage& other) = default;
     // Destructor
-    virtual ~DisconnectSuccessMessage();
+    virtual ~DisconnectedMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; };

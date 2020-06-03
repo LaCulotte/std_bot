@@ -8,10 +8,11 @@
 // Asks for the focus of one or multiple connections.
 // In other words, it asks some connections to send the incoming messages to the sending MessagingUnit
 class DisconnectRequestMessage : public Message {
+public:
     // Contructor
     DisconnectRequestMessage() {};
-    // Constructor; will diconnect the connection whose id is 'connectionId'
-    DisconnectRequestMessage(int connectionId) { this->connectionId = connectionId; };
+    // Constructor; will diconnect the connection whose id is in 'connectionIds'
+    DisconnectRequestMessage(vector<int> connectionIds) { this->connectionIds = connectionIds; };
     // Constructor; will disconnect from all the connections that make 'filter' return true
     DisconnectRequestMessage(function<bool(sp<Connection>)> filter) { this->filter = filter; };
     // Copy constuctor
@@ -20,16 +21,18 @@ class DisconnectRequestMessage : public Message {
     // Copy operator
     virtual DisconnectRequestMessage& operator=(const DisconnectRequestMessage& other) = default;
     // Destructor
-    virtual ~DisconnectRequestMessage();
+    virtual ~DisconnectRequestMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; };
     // Message's protocol Id
     static const unsigned int protocolId = 621;
 
-    // Id of the connection to disconnect
-    int connectionId = -1;
-    // Filter : diconnects from the connections that make 'filter' return true when passed as argument
+    // Ids of the connections to disconnect
+    vector<int> connectionIds = {};
+    /** Filter : diconnects from the connections that make 'filter' return true when passed as argument
+     *  Will use the filter if connectionIds is empty
+     */
     function<bool(sp<Connection>)> filter;
 
     // True if all the connections passing the filter should be disconnected

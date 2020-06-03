@@ -27,7 +27,7 @@ sp<ConnectionMessage> PrefixNetworkConnection::readMessage() {
         sp<MessageDataBuffer> prefixData = readPrefix();
 
         if(prefixData){
-            // CHANGER : c'est la connection qui va définir comment serialize ou deserialize le prefix => bcp plus pratique ?? (oui je pense)
+            // TODO : CHANGER : c'est la connection qui va définir comment serialize ou deserialize le prefix => bcp plus pratique ?? (oui je pense)
 
             // sp<PrefixedMessage> message = dynamic_pointer_cast<PrefixedMessage(msgTypeHandler.)
             sp<PrefixedMessage> message = deserializePrefix(prefixData);

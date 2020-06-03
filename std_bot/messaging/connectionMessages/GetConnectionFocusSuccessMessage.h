@@ -5,6 +5,7 @@
 
 // Tells that the focus was successfully gotten
 class GetConnectionFocusSuccessMessage : public Message {
+public:
     // Contructor
     GetConnectionFocusSuccessMessage() {};
     // Constructor; with the ids of the connection whose focus was changed
@@ -15,7 +16,7 @@ class GetConnectionFocusSuccessMessage : public Message {
     // Copy operator
     virtual GetConnectionFocusSuccessMessage& operator=(const GetConnectionFocusSuccessMessage& other) = default;
     // Destructor
-    virtual ~GetConnectionFocusSuccessMessage();
+    virtual ~GetConnectionFocusSuccessMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; };

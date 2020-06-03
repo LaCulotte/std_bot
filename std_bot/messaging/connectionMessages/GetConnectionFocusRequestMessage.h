@@ -8,10 +8,11 @@
 // Asks for the focus of one or multiple connections.
 // In other words, it asks some connections to send the incoming messages to the sending MessagingUnit
 class GetConnectionFocusRequestMessage : public Message {
+public:
     // Contructor
     GetConnectionFocusRequestMessage() {};
-    // Constructor; will get the focus from the connection whose id is 'connectionId'
-    GetConnectionFocusRequestMessage(int connectionId) { this->connectionId = connectionId; };
+    // Constructor; will get the focus from the connections whose id is 'connectionIds'
+    GetConnectionFocusRequestMessage(vector<int> connectionIds) { this->connectionIds = connectionIds; };
     // Constructor; get focus of all the connections that make 'filter' return true
     GetConnectionFocusRequestMessage(function<bool(sp<Connection>)> filter) { this->filter = filter; };
     // Copy constuctor
@@ -20,16 +21,20 @@ class GetConnectionFocusRequestMessage : public Message {
     // Copy operator
     virtual GetConnectionFocusRequestMessage& operator=(const GetConnectionFocusRequestMessage& other) = default;
     // Destructor
-    virtual ~GetConnectionFocusRequestMessage();
+    virtual ~GetConnectionFocusRequestMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; };
     // Message's protocol Id
     static const unsigned int protocolId = 618;
 
-    // Id of the connection to get the focus from
-    int connectionId = -1;
-    // Filter : get the focus of the connections that make 'filter' return true when passed as argument
+    /** Ids of the connections to get the focus from
+     *  The preferred connection of the source will be the last id in 'connectionIds'
+     */
+    vector<int> connectionIds = {};
+    /** Filter : get the focus of the connections that make 'filter' return true when passed as argument
+     *  Will use the filter if connectionIds is empty
+     */
     function<bool(sp<Connection>)> filter;
 
     // True if all the connections passing the filter should change focus

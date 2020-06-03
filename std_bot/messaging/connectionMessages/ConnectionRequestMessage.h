@@ -6,6 +6,7 @@
 #include <functional>
 
 class ConnectionRequestMessage : public Message {
+public:
     // Contructor
     ConnectionRequestMessage() {};
     // Constructor; 'connection' will be connected to 'destAddress', to 'destPort'
@@ -18,7 +19,7 @@ class ConnectionRequestMessage : public Message {
     // Copy operator
     virtual ConnectionRequestMessage& operator=(const ConnectionRequestMessage& other) = default;
     // Destructor
-    virtual ~ConnectionRequestMessage();
+    virtual ~ConnectionRequestMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; }

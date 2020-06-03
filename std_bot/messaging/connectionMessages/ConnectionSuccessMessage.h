@@ -16,7 +16,7 @@ public:
     // Copy operator
     virtual ConnectionSuccessMessage& operator=(const ConnectionSuccessMessage& other) = default;
     // Destructor
-    virtual ~ConnectionSuccessMessage();
+    virtual ~ConnectionSuccessMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; }

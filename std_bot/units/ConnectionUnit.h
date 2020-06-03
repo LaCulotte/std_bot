@@ -5,8 +5,10 @@
 #include "Connection.h"
 #include "ClientConnection.h"
 #include "ServerConnection.h"
+#include "BasicConnectionFrame.h"
 //TODO : enlever ce truc
 #include "BasicPrefixConnection.h"
+#include <functional>
 
 class ConnectionUnit : public MessagingUnit {
 public:
@@ -28,11 +30,15 @@ public:
     template<typename T>
     int getConnectionId();
     template<typename T>
-    int getConnectionId(bool filter(T));
+    int getConnectionId(function<bool(sp<Connection>)> filter);
+    template<typename T>
+    vector<int> getConnectionIds(int n);
+    template<typename T>
+    vector<int> getConnectionIds(int n, function<bool(sp<Connection>)> filter);
     template<typename T>
     vector<int> getAllConnectionIds();
     template<typename T>
-    vector<int> getAllConnectionIds(bool filter(T));
+    vector<int> getAllConnectionIds(function<bool(sp<Connection>)> filter);
 
     virtual void initFrames() override;
     virtual void tick() override;
@@ -42,6 +48,7 @@ public:
 
 protected:
 
+    //TODO : changer en map ordonnée -> premiers éléments = éléments les plus vieux
     unordered_map<int, sp<Connection>> connections;
     int lastConnectionId = 0;
 
@@ -61,14 +68,39 @@ int ConnectionUnit::getConnectionId(){
 }
 
 template<typename T>
-int ConnectionUnit::getConnectionId(bool filter(T)){
+int ConnectionUnit::getConnectionId(function<bool(sp<Connection>)> filter){
     for(auto it = connections.begin(); it != connections.end(); it++){
-        sp<T> T_cast = dynamic_cast<T>(it->second);
+        sp<T> T_cast = dynamic_pointer_cast<T>(it->second);
         if(T_cast && filter(T_cast))
             return it->first;
     }
 
     return -1;
+}
+
+template<typename T>
+vector<int> ConnectionUnit::getConnectionIds(int n){
+    vector<int> ret;
+
+    for(auto it = connections.begin(); it != connections.end() && ret.size() < n; it++){
+        if(dynamic_pointer_cast<T>(it->second))
+            ret.push_back(it->first);
+    }
+
+    return ret;
+}
+
+template<typename T>
+vector<int> ConnectionUnit::getConnectionIds(int n, function<bool(sp<Connection>)> filter){
+    vector<int> ret;
+
+    for(auto it = connections.begin(); it != connections.end() && ret.size() < n; it++){
+        sp<T> T_cast = dynamic_pointer_cast<T>(it->second);
+        if(T_cast && filter(T_cast))
+            ret.push_back(it->first);
+    }
+
+    return ret;
 }
 
 template<typename T>
@@ -84,11 +116,11 @@ vector<int> ConnectionUnit::getAllConnectionIds(){
 }
 
 template<typename T>
-vector<int> ConnectionUnit::getAllConnectionIds(bool filter(T)){
+vector<int> ConnectionUnit::getAllConnectionIds(function<bool(sp<Connection>)> filter){
     vector<int> ret;
 
     for(auto it = connections.begin(); it != connections.end(); it++){
-        sp<T> T_cast = dynamic_cast<T>(it->second);
+        sp<T> T_cast = dynamic_pointer_cast<T>(it->second);
         if(T_cast && filter(T_cast))
             ret.push_back(it->first);
     }

@@ -1,23 +1,23 @@
-#ifndef CONNECTION_FAIL_MESSAGE_H
-#define CONNECTION_FAIL_MESSAGE_H
+#ifndef CONNECTION_FAILURE_MESSAGE_H
+#define CONNECTION_FAILURE_MESSAGE_H
 
 #include "Message.h"
 
 // Used to tell that the requested packet was not sent, with a reason defaulted at "Fail"
-class ConnectionFailMessage : public Message {
+class ConnectionFailureMessage : public Message {
 public:
     // Constructor
-    ConnectionFailMessage() {};
+    ConnectionFailureMessage() {};
     // Constructor with reason setter
-    ConnectionFailMessage(string reason) { this->reason = reason; };
+    ConnectionFailureMessage(string reason) { this->reason = reason; };
     // Copy construtor
-    ConnectionFailMessage(const ConnectionFailMessage& other) = default;
+    ConnectionFailureMessage(const ConnectionFailureMessage& other) = default;
 
 
     // Copy operator
-    virtual ConnectionFailMessage& operator=(const ConnectionFailMessage& other) = default;
+    virtual ConnectionFailureMessage& operator=(const ConnectionFailureMessage& other) = default;
     // Destructor
-    virtual ~ConnectionFailMessage();
+    virtual ~ConnectionFailureMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; }

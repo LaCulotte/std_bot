@@ -6,6 +6,7 @@
 #include <functional>
 
 class ConnectionIdMessage : public Message {
+public:
     // Contructor
     ConnectionIdMessage() {};
     // Constructor; Sets returning ids
@@ -16,7 +17,7 @@ class ConnectionIdMessage : public Message {
     // Copy operator
     virtual ConnectionIdMessage& operator=(const ConnectionIdMessage& other) = default;
     // Destructor
-    virtual ~ConnectionIdMessage();
+    virtual ~ConnectionIdMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; };

@@ -1,23 +1,23 @@
-#ifndef SENDPACKET_FAIL_MESSAGE_H
-#define SENDPACKET_FAIL_MESSAGE_H
+#ifndef SENDPACKET_FAILURE_MESSAGE_H
+#define SENDPACKET_FAILURE_MESSAGE_H
 
 #include "Message.h"
 
 // Used to tell that the requested packet was not sent, with a reason defaulted at "Fail"
-class SendPacketFailMessage : public Message {
+class SendPacketFailureMessage : public Message {
 public:
     // Constructor
-    SendPacketFailMessage() {};
+    SendPacketFailureMessage() {};
     // Constructor with reason setter
-    SendPacketFailMessage(string reason) { this->reason = reason; };
+    SendPacketFailureMessage(string reason) { this->reason = reason; };
     // Copy construtor
-    SendPacketFailMessage(const SendPacketFailMessage& other) = default;
+    SendPacketFailureMessage(const SendPacketFailureMessage& other) = default;
 
 
     // Copy operator
-    virtual SendPacketFailMessage& operator=(const SendPacketFailMessage& other) = default;
+    virtual SendPacketFailureMessage& operator=(const SendPacketFailureMessage& other) = default;
     // Destructor
-    virtual ~SendPacketFailMessage();
+    virtual ~SendPacketFailureMessage() = default;
 
     // Protocol id getter
     unsigned int getId() override { return protocolId; }
