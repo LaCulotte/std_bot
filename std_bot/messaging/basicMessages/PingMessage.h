@@ -3,6 +3,7 @@
 
 #include "Message.h"
 
+// Asks for a echo
 class PingMessage : public Message {
 public: 
     virtual unsigned int getId() override { return protocolId; };

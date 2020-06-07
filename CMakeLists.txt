@@ -11,8 +11,9 @@ set(SRCS
     std_bot/connection/NetworkConnection.cpp
     std_bot/connection/PrefixNetworkConnection.cpp
     std_bot/connection/ClientConnection.cpp
+    std_bot/connection/ServerConnection.cpp
     std_bot/connection/ListeningServer.cpp
-    std_bot/frames/connectionFrames/BasicConnectionFrame.cpp
+    std_bot/frames/connectionFrames/BasicConnectionUnitFrame.cpp
     std_bot/units/WorkingUnit.cpp
     std_bot/units/MessagingUnit.cpp
     std_bot/units/ConnectionUnit.cpp

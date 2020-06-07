@@ -29,7 +29,6 @@ public:
     sp<ConnectionMessage> message; 
     // Connection through witch the packet will be sent
     int connectionId = -1;
-    //TODO :connectionId?
 };
 
 #endif

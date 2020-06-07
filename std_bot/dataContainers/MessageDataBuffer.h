@@ -7,16 +7,24 @@
 class MessageDataBuffer : public DataBuffer<char> {
 public:
 
+    // Constructor
     MessageDataBuffer() {};
+    // Constructor with char vector initialisation
     MessageDataBuffer(vector<char> dat) : DataBuffer<char>(dat) {};
+    // Constructor with char array initialisation
     MessageDataBuffer(char *dat, int size) : DataBuffer<char>(dat, size) {};
-
+    // Copy constructor
     MessageDataBuffer(const MessageDataBuffer& other) : DataBuffer<char>(other) {};
+
+    // Copy operator
     MessageDataBuffer& operator=(const MessageDataBuffer& other) = default;
+    // Destructor
     ~MessageDataBuffer() = default;
 
-
+    // Transforms the data vector into a char array
     char * toCharArray();
+
+    // Read functions for basic data types
 
     bool readBool();
     char readByte();
@@ -27,6 +35,8 @@ public:
     string readUTF();
     string readUTFBytes(int length);
 
+    // Write functions for basic data types
+
     void writeBool(bool b);
     void writeByte(char byte);
     void writeShort(int16_t s);
@@ -36,7 +46,8 @@ public:
     void writeUTF(string UTF);
     void writeUTFBytes(string UTF);
 
-    void print();
+    // Transforms the data buffer into a string
+    virtual string toString() override;
 };
 
 #endif

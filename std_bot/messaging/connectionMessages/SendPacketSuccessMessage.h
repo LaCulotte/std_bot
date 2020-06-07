@@ -21,8 +21,6 @@ public:
 
     // Message's protocol Id
     static const unsigned int protocolId = 611;
-
-    //TODO :connectionId?
 };
 
 #endif

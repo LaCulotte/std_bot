@@ -152,9 +152,10 @@ void MessageDataBuffer::writeUTFBytes(string UTF){
         write(c);
 }
 
-void MessageDataBuffer::print(){
-    for (char unit : data)
-        cout << int( (unsigned char) unit) << " ";
-        // cout <<  unit << " ";
-    cout << endl;
+string MessageDataBuffer::toString(){
+    stringstream str_stream;
+    for (char unit : data){
+        str_stream << (unsigned int) unit << "; ";
+    }
+    return str_stream.str();
 }

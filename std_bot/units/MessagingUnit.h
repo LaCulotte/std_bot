@@ -6,85 +6,127 @@
 #include <unordered_map>
 #include <map>
 #include <unordered_set>
+#include <functional>
 #include "UpdatingFrame.h"
 
 class Frame;
 class UpdatingFrame;
 class MessageInterface;
 
-// Does not mean that it communicates throught network. It communicates with other MessagingUnits
 /**
- *  
+ * WorkingUnit that communicates with other WorkingUnits.
+ * The work made by a MessagingUnit is defined throught Frames and triggered throught Messages.
+ * Each tick, the MessagingUnit recovers sent messages and then they are processed throught Frames.
  */
 class MessagingUnit : public WorkingUnit {
 public :
+    // Constructor
     MessagingUnit();
+    // Copy constructor
     MessagingUnit(const MessagingUnit& other) = default;
 
+    // Copy operator
     virtual MessagingUnit& operator=(const MessagingUnit& other) = default;
+    // Destructor
     virtual ~MessagingUnit();
 
+    // Initialize the first frames
     virtual void initFrames();
+    // Adds a frame
     bool addFrame(sp<Frame> frame, bool alwaysUpdates = false);
 
+    // Returns a frame that can cast into T
     template<typename T>
     sp<Frame> getFrame();
+    // Returns multiple frames that can cast into T
     template<typename T>
-    vector<sp<Frame>> getFrames(int n);
+    vector<sp<Frame>> getFrames(int n, bool fill = false);
+    // Returns all the frames that can cast into T
     template<typename T>
     vector<sp<Frame>> getAllFrames();
 
+    // Remove 'frame'
     sp<Frame> removeFrame(sp<Frame> frame);
+    // Remove 'frame'
     sp<Frame> removeFrame(Frame * frame);
+    // Remove multiple 'frames'
     vector<sp<Frame>> removeFrames(vector<sp<Frame>> frames, bool with_nullptr = true);
+    // Remove multiple 'frames'
     vector<Frame *> removeFrames(vector<Frame *> frames, bool with_nullptr = true);
 
+    // Remove a frame that can cast into T
     template<typename T>
     sp<Frame> popFrame();
+    // Remove multiple frames that can cast into T
     template<typename T>
-    vector<sp<Frame>> popFrames(int n);
+    vector<sp<Frame>> popFrames(int n, bool fill = false);
+    // Remove all the frames that can cast into T
     template<typename T>
     vector<sp<Frame>> popAllFrames();
 
+    // Links two MessagingUnits
     static bool link(sp<MessagingUnit> mu1, sp<MessagingUnit> mu2);
 
+    // Sends a message to the MessagingUnit without being a MessagingUnit
     bool sendSelfMessage(sp<Message> message);
+    // Sends a message to the messagingUnit of id 'destId' 
     bool sendMessage(sp<Message> message, int destId);
 
+    /** Gets the id of a MessageInterface which destination can cast into T. 
+     * This id can differ depending on the messagingUnit you ask
+     */
     template<typename T>
     int getMessageInterfaceOutId();
+    /** Gets the id of a MessageInterface which destination can cast into T and makes filter return true. 
+     * This id can differ depending on the messagingUnit you ask
+     */
     template<typename T>
-    int getMessageInterfaceOutId(bool filter(sp<T>));
+    int getMessageInterfaceOutId(function<bool(sp<T>)> filter);
+    /** Gets the id of all the MessageInterface which destination can cast into T. 
+     * This id can differ depending on the messagingUnit you ask
+     */
     template<typename T>
     vector<int> getAllMessageInterfaceOutIds();
+    /** Gets the id of all the MessageInterface which destination can cast into T and makes filter return true. 
+     * This id can differ depending on the messagingUnit you ask
+     */
     template<typename T>
-    vector<int> getAllMessageInterfaceOutIds(bool filter(sp<T>));
+    vector<int> getAllMessageInterfaceOutIds(function<bool(sp<T>)> filter);
 
-    virtual bool removeMessageInterface(int interfaceKey);
-    virtual bool removeMessageInterface(unordered_map<int, sp<MessageInterface>*>::iterator interfaceIt);
+    // Removes the messageInterface of id 'interfaceId'
+    virtual bool removeMessageInterface(int interfaceId);
+    // Removes the messageInterface at the iterator 'interfaceIt'
+    virtual bool removeMessageInterface(map<int, sp<MessageInterface>*>::iterator interfaceIt);
 
-    string messagingUnitKey = "BasicMessagingUnit";
+    // Description of the MessagingUnit. Used to find a special messagingInterface with 'getMessageInterfaceOutId''s filter
+    string messagingUnitDescription = "BasicMessagingUnit";
 protected:
 
+    // Tick; launched every loop
     virtual void tick() override;
 
+    // Frames of the MessagingUnit, ordered by priority
     multimap<int, sp<Frame>> frames;
+    // Frames that are already added to the MessagingUnit
     unordered_set<sp<Frame>> addedFrames;
+    // Frames that are updated each tick
     vector<sp<UpdatingFrame>> alwaysUptadingFrames;  
+    // Removes a Frame from all arrays
     void removeFrameFromArrays(multimap<int, sp<Frame>>::iterator itr);  
 
+    // Messages that will be processed by the frames, with the source MessagingUnit
     vector<pair<int, sp<Message>>> messagesToProcess;
 
-    int maxMessageLifetime = 1;
-
-    int addMessagingUnit(sp<MessageInterface> interface_in, sp<MessageInterface> interface_out);
-    int lastMsgInterfaceOutId = 0;
-    // unordered_map<int, weak_ptr<MessageInterface>> msgInterfaces_out;
+    // Adds a pair of MessageInterfaces
+    int addMessageInterfaces(sp<MessageInterface> interface_in, sp<MessageInterface> interface_out);
+    // Id of the last added MessageInterface
+    int lastMsgInterfacesId = 0;
+    // Message interface used by objects that are not linked (one-way communication)
     sp<MessageInterface> msgInterfaceExtern;
-    // paires : id -> sp<MessageInterface>[2] = {in, out}
-    //TODO : changer en map ordonnée -> premiers éléments = éléments les plus vieux
-    unordered_map<int, sp<MessageInterface>*> msgInterfaces;
+    // Map id -> pair of MessageInterfaces ([0] = in, [1] = out)
+    map<int, sp<MessageInterface>*> msgInterfaces;
 
+    // Retreive the messages from the incoming MessageInterfaces
     void retreiveMessages();
 };
 
@@ -101,7 +143,7 @@ sp<Frame> MessagingUnit::popFrame(){
 }
 
 template<typename T>
-vector<sp<Frame>> MessagingUnit::popFrames(int n){
+vector<sp<Frame>> MessagingUnit::popFrames(int n, bool fill){
     vector<sp<Frame>> ret;
 
     for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end() && ret.size() < n; it++){
@@ -112,8 +154,9 @@ vector<sp<Frame>> MessagingUnit::popFrames(int n){
         }
     }
 
-    while(ret.size() < n)
-        ret.push_back(nullptr);
+    if(fill)
+        while(ret.size() < n)
+            ret.push_back(nullptr);
 
     return ret;
 }
@@ -145,7 +188,7 @@ sp<Frame> MessagingUnit::getFrame(){
 }
 
 template<typename T>
-vector<sp<Frame>> MessagingUnit::getFrames(int n){
+vector<sp<Frame>> MessagingUnit::getFrames(int n, bool fill){
     vector<sp<Frame>> ret;
 
     for(multimap<int, sp<Frame>>::iterator it = frames.begin(); it != frames.end() && ret.size() < n; it++) {
@@ -153,8 +196,9 @@ vector<sp<Frame>> MessagingUnit::getFrames(int n){
             ret.push_back(it->second);
     }
 
-    while(ret.size() < n)
-        ret.push_back(nullptr);
+    if(fill)
+        while(ret.size() < n)
+            ret.push_back(nullptr);
 
     return ret;
 }
@@ -184,7 +228,7 @@ int MessagingUnit::getMessageInterfaceOutId(){
 }
 
 template<typename T>
-int MessagingUnit::getMessageInterfaceOutId(bool filter(sp<T>)){
+int MessagingUnit::getMessageInterfaceOutId(function<bool(sp<T>)> filter){
     for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){
         if(it->second[1]){
             sp<T> T_cast = dynamic_cast<T *>(it->second[1]->destination);
@@ -209,7 +253,7 @@ vector<int> MessagingUnit::getAllMessageInterfaceOutIds(){
 }
 
 template<typename T>
-vector<int> MessagingUnit::getAllMessageInterfaceOutIds(bool filter(sp<T>)){
+vector<int> MessagingUnit::getAllMessageInterfaceOutIds(function<bool(sp<T>)> filter){
     vector<int> ret;
 
     for(auto it = msgInterfaces.begin(); it != msgInterfaces.end(); it++){

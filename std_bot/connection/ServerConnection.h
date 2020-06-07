@@ -5,9 +5,13 @@
 
 class ServerConnection : public virtual NetworkConnection {
 public:
-    ServerConnection() : NetworkConnection() { connectionKey = "ServerConnection"; }
+    // Constructor
+    ServerConnection() : NetworkConnection() { connectionDescription = "ServerConnection"; }
 
-    virtual void onConnection() {};
+    /** Function that will be called when the server connection is build
+     * Here, just gets the ip address
+     */
+    virtual void onConnection();
 };
 
 #endif

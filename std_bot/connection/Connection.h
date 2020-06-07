@@ -3,62 +3,57 @@
 
 #include "std_include.h"
 #include "ptr_include.h"
+#include "Logger.h"
 #include "ConnectionMessage.h"
 #include "MessageTypeHandler.h"
 
+// Interface for a connection, that can be a network connection or any other type
 class Connection{
 public:
+    // Constructor
     Connection() {};
-    Connection(const Connection& other) { connectionKey = other.connectionKey; };
+    // Copy constructor
+    Connection(const Connection& other) { connectionDescription = other.connectionDescription; };
 
-    virtual Connection& operator=(const Connection& other) { connectionKey = other.connectionKey; return *this; };
-    virtual ~Connection() { this->disconnect(); };
+    // Copy operator
+    virtual Connection& operator=(const Connection& other) { connectionDescription = other.connectionDescription; return *this; };
+    // Desctructor
+    virtual ~Connection() = default;
 
-    virtual void initHandler() {}; 
+    // Initialize the connection's MessageTypeHandler
+    virtual void initHandler() = 0; 
 
-    // If data the message returned is invalid, discard the message. Then there is two options : 
-    // 1. Empty the socket input buffer and wait for other messages to come
-    // Pros : You make sure to not interpret wrong message.
-    // Cons : You may lose some messages
-    // 2. Ignore the invalid message and treat the following data as if it was a new message
-    // Pros : You are almost sure to not lose any message (not true if the header is more than one byte)
-    // Cons : You may interpret message data as a header. If this header is valid, you may interpret a wrong message
-    //        that can mess with the system continuity
-    // In my opinion, you should use the first solution if the messages received are few and big, and you can handle losing some messages
-    //                you should use the second solution if you have to (and can) make sure that you do not lose any message
+    // Receive a message through connection
+    virtual sp<ConnectionMessage> readMessage() = 0;
+    // Receive mutliple messages through connection
+    virtual vector<sp<ConnectionMessage>> readMessages(int n, bool fill = true) = 0;
+    // Receive all messages through connection
+    virtual vector<sp<ConnectionMessage>> readAllMessages() = 0;
 
-    //TODO : rendre fonctions purement virtuelles
-    virtual sp<ConnectionMessage> readMessage() { return nullptr; };
-    virtual vector<sp<ConnectionMessage>> readMessages(int n) { return vector<sp<ConnectionMessage>>(); };
-    virtual vector<sp<ConnectionMessage>> readAllMessages() { return vector<sp<ConnectionMessage>>(); };
+    // Send a message through connection
+    virtual bool sendMessage(sp<ConnectionMessage> message) = 0;
+    // Returns true if there is a message to read. In this case, readMessage should not return nullptr in normal conditions
+    virtual bool isThereMessage() = 0; 
 
-    virtual bool sendMessage(sp<ConnectionMessage> msg) { return false; };
-    virtual bool isThereMessage() { return false; }; 
+    // Returns true if the connection is connected, ie. can read and send messages
+    virtual bool isConnected() = 0;
+    // Disconnects the connection
+    virtual void disconnect() = 0;
+    
+    // Connection description. Used to differentiate special connections in an array or a map
+    string connectionDescription = "Connection";
 
-    virtual void temp() { cout << "Connection" << endl; };
-
-    virtual bool isConnected() { return connected; };
-
-    virtual void disconnect() {};
-
-    string connectionKey = "Connection";
-// protected:
-public:
+protected:
+    // True if the connection is connected
     bool connected = false;
 
-    virtual bool writeData(sp<MessageDataBuffer> data) { return false; };
-    virtual sp<MessageDataBuffer> readData(int length) { return nullptr; };
+    // Sends raw data from a MessageDataBuffer through connection
+    virtual bool writeData(sp<MessageDataBuffer> data) = 0;
+    // Reads raw data from a MessageDataBuffer through connection
+    virtual sp<MessageDataBuffer> readData(int length) = 0;
 
-    // Write header to identify the type and other descritors of the message (length for example)
-    virtual void wrapData(sp<MessageDataBuffer> data, sp<Message> msg) {};
-    // Read header to identify the type and other descritors of the message (length for example)
-    // This step should not fully load the message, but rather readMessage()
-    // This step should be a preload, where you gather information on how much data you need to read
-    // to load the message and/or how to interpret it
-    // TODO : more suitable name
-    virtual sp<Message> unwrapData(sp<MessageDataBuffer> data) { return nullptr; };
-
-    sp<MessageTypeHandler> msgTypeHandler;
+    // MessageTypeHandler used to get a message from data read with readData 
+    sp<MessageTypeHandler> messageTypeHandler;
 };
 
 #endif

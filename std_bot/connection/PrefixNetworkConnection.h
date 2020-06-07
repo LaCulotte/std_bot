@@ -16,41 +16,57 @@
 
 class PrefixNetworkConnection : public virtual NetworkConnection {
 public:
-
+    // Constructor
     PrefixNetworkConnection();
+    // Copy constructor
     PrefixNetworkConnection(const PrefixNetworkConnection& other);
 
-    //Tester que ca appelle la fonction surchargée
+    // Copy operator
     virtual PrefixNetworkConnection& operator=(const PrefixNetworkConnection& other);
+    // Destructor
     virtual ~PrefixNetworkConnection() = default;
 
+    // Receive a message through connection
     virtual sp<ConnectionMessage> readMessage() override;
-    virtual vector<sp<ConnectionMessage>> readMessages(int n) override;
+    // Receive mutliple messages through connection
+    virtual vector<sp<ConnectionMessage>> readMessages(int n, bool fill = true) override;
+    // Receive all messages through connection
     virtual vector<sp<ConnectionMessage>> readAllMessages() override;
 
+    // Send a message through connection
     virtual bool sendMessage(sp<ConnectionMessage> message) override;
 
-// protected:
-public:
-    //TODO : rendre purement virtuelles
-    virtual sp<MessageDataBuffer> readPrefix() { return nullptr; };
-    virtual sp<PrefixedMessage> deserializePrefix(sp<MessageDataBuffer> data) { return nullptr; };
+protected:
+    // Reads and return necessary prefix data to know the type and the length of the message
+    virtual sp<MessageDataBuffer> readPrefix() = 0;
+    // Returns the right message type with only the prefixed data
+    virtual sp<PrefixedMessage> deserializePrefix(sp<MessageDataBuffer> prefixData) = 0;
+    // Write the prefix of the message at the beggining of data
     virtual bool serializePrefix(sp<MessageDataBuffer> data, sp<PrefixedMessage> msg) = 0;
 
-    void resetPending();
-
-    // If the data requested is bigger than the data contained in the socket read buffer, the 
-    // NetworkConnection with save the read data and free the current thread. The next time data is requested,
-    // the connection will continue from the saved data, until the length requested is read or until an other 
-    // message is requested.
+    /**
+     * If the data requested is bigger than the data contained in the socket read buffer, the 
+     * connection with save the read data in a 'pending' buffer and free the current thread. 
+     * The next time data is requested, the connection will continue from the saved (pending) data,
+     * until the length requested is read or until an other message is requested.
+     */
+    // True if there is a pending message
     bool pending = false;
+    // Saved (pending) data
     sp<MessageDataBuffer> pendingData;
+    // Requested length of the final data
     int pendingDataFinalLength;
+    // Saved and incomplete message
     sp<PrefixedMessage> pendingMessage;
+    // Last time where pending data was read
     chrono::system_clock::time_point timeLastPendingUpdate;
-    // Maximum time between two following packets so they can be considered from the same message
-    //  nullptr means that two packets can be infinitly appart and still can be consederes from the same message
+    /**
+     * Maximum time between two following packets so they can be considered from the same message
+     * nullptr means that two packets can be infinitly appart and still can be consedered from the same message
+     */
     chrono::system_clock::duration *maxTimeBetweenPendingUpdates;
+    // Resets the pending variables
+    void resetPending();
 };
 
 #endif

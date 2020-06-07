@@ -1,64 +1,75 @@
 #include "ConnectionUnit.h"
 
 ConnectionUnit::ConnectionUnit() : MessagingUnit() {
-    messagingUnitKey = "ConnectionUnit";
+    messagingUnitDescription = "ConnectionUnit";
 }
 
 void ConnectionUnit::initFrames(){
-    addFrame(make_shared<BasicConnectionFrame>());
+    addFrame(make_shared<BasicConnectionUnitFrame>());
 }
 
-int ConnectionUnit::connectToServer(string address, int port, int sourceInterfaceKey){
-    //TODO : Remettre une clientConnectionHabituelle
-    sp<BasicPrefixConnection> newConnection(new BasicPrefixConnection());
+int ConnectionUnit::connectToServer(sp<ClientConnection> toConnect, string address, int port, int sourceInterfaceId){
+    // Returns if toConnect is nullptr
+    if(!toConnect)
+        return -1;
 
-    if(newConnection->connectTo(address, port)){
-        return addConnection(newConnection, sourceInterfaceKey);
+    // Tries to establish the connection
+    if(toConnect->connectTo(address, port)){
+        // If it succeeds, returns the id of the newly added connection.
+        return addConnection(toConnect, sourceInterfaceId);
     } else {
+        // Returns -1 to indicate that the connection could not be made
         return -1;
     }
 }
 
-int ConnectionUnit::addConnection(sp<Connection> connection, int sourceInterfaceKey){
+int ConnectionUnit::addConnection(sp<Connection> connection, int sourceInterfaceId){
+    // Checks if the connection is valid
     if(!connection)
         return -1;
-
+    
+    // Insert the new connection
     connections.insert(pair<int, sp<Connection>>(lastConnectionId++, connection));
 
-    if(sourceInterfaceKey != -1 && msgInterfaces.find(sourceInterfaceKey) != msgInterfaces.end()) {
+    // Changes the connection's destination and the source's preffered destination connection 
+    if(sourceInterfaceId != -1 && msgInterfaces.find(sourceInterfaceId) != msgInterfaces.end()) {
         
-        connectionKey_to_interfaceKey.insert(pair(lastConnectionId - 1, sourceInterfaceKey));
-
-        interfaceKey_to_preferredConnectionKey[sourceInterfaceKey] = lastConnectionId - 1;
+        connectionId_to_interfaceId.insert(pair(lastConnectionId - 1, sourceInterfaceId));
+        interfaceId_to_preferredConnectionId[sourceInterfaceId] = lastConnectionId - 1;
     }
 
     return lastConnectionId - 1;
 }
 
-bool ConnectionUnit::sendConnectionMessage(sp<ConnectionMessage> message, int destConnectionKey, int sourceInterfaceKey) {
-    if(connections.find(destConnectionKey) != connections.end()){
-        sp<Connection> connection = connections.at(destConnectionKey);
+bool ConnectionUnit::sendConnectionMessage(sp<ConnectionMessage> message, int destConnectionId, int sourceInterfaceId) {
+    // Tries to find the destination with 'destConnectionId'
+    if(connections.find(destConnectionId) != connections.end()){
+        sp<Connection> connection = connections.at(destConnectionId);
 
-        if(msgInterfaces.find(sourceInterfaceKey) != msgInterfaces.end())
-            interfaceKey_to_preferredConnectionKey[sourceInterfaceKey] = destConnectionKey;
+        // Changes the source's preffered destination connection
+        if(msgInterfaces.find(sourceInterfaceId) != msgInterfaces.end())
+            interfaceId_to_preferredConnectionId[sourceInterfaceId] = destConnectionId;
 
+        // Sends the message
         return connection->sendMessage(message);
-    } else if(interfaceKey_to_preferredConnectionKey.find(sourceInterfaceKey) != interfaceKey_to_preferredConnectionKey.end()){
-        int connectionKey = interfaceKey_to_preferredConnectionKey.at(sourceInterfaceKey);
+    } else if(interfaceId_to_preferredConnectionId.find(sourceInterfaceId) != interfaceId_to_preferredConnectionId.end()){
+        // If the destination id is invalid, sends the message to the source's preffered destination connection
+        int connectionId = interfaceId_to_preferredConnectionId.at(sourceInterfaceId);
 
-        if(connections.find(connectionKey) != connections.end())
-            return connections.at(connectionKey)->sendMessage(message);
+        if(connections.find(connectionId) != connections.end())
+            return connections.at(connectionId)->sendMessage(message);
     }
 
     return false;
 }
 
-bool ConnectionUnit::changeConnectionDestination(int connectionKey, int newDestinationKey) {
-    if(connections.find(connectionKey) != connections.end() && msgInterfaces.find(newDestinationKey) != msgInterfaces.end()){
+bool ConnectionUnit::changeConnectionDestination(int connectionId, int newDestinationId) {
+    // Checks if the connectionId and the newDestinationId are valid 
+    if(connections.find(connectionId) != connections.end() && msgInterfaces.find(newDestinationId) != msgInterfaces.end()){
 
-        connectionKey_to_interfaceKey[connectionKey] = newDestinationKey;
-
-        interfaceKey_to_preferredConnectionKey[newDestinationKey] = connectionKey;
+        // Change occurs
+        connectionId_to_interfaceId[connectionId] = newDestinationId;
+        interfaceId_to_preferredConnectionId[newDestinationId] = connectionId;
 
         return true;
     }
@@ -66,23 +77,28 @@ bool ConnectionUnit::changeConnectionDestination(int connectionKey, int newDesti
     return false;
 }
 
-void ConnectionUnit::disconnect(int connectionKey){
-    if(connections.find(connectionKey) != connections.end()){
-        connections.at(connectionKey)->disconnect();
+void ConnectionUnit::disconnect(int connectionId){
+    // Finds the connection
+    auto connectionIt = connections.find(connectionId);
+    if(connectionIt != connections.end()){
+        // Disconnects
+        connectionIt->second->disconnect();
 
-        connections.erase(connectionKey);
-        if(connectionKey_to_interfaceKey.find(connectionKey) != connectionKey_to_interfaceKey.end())
-            connectionKey_to_interfaceKey.erase(connectionKey); 
+        // Removes the connection
+        connections.erase(connectionIt);
+        if(connectionId_to_interfaceId.find(connectionId) != connectionId_to_interfaceId.end())
+            connectionId_to_interfaceId.erase(connectionId); 
         
-        //A voir si je le laisse
-        for(auto it = interfaceKey_to_preferredConnectionKey.begin(); it != interfaceKey_to_preferredConnectionKey.end(); it++){
-            if(it->second = connectionKey)
-                interfaceKey_to_preferredConnectionKey.erase(it);
+        //Removes the connection from the prefferred destination connections
+        for(auto it = interfaceId_to_preferredConnectionId.begin(); it != interfaceId_to_preferredConnectionId.end(); it++){
+            if(it->second = connectionId)
+                interfaceId_to_preferredConnectionId.erase(it);
         }
     }
 }
 
 void ConnectionUnit::tick(){
+    // Before anything, retreives one message from every connections and send them to the correct destination
     for(auto it = connections.begin(); it != connections.end(); it++){
         sp<ConnectionMessage> message = it->second->readMessage();
         if(!message)
@@ -90,27 +106,30 @@ void ConnectionUnit::tick(){
         
         message->sourceConnectionId = it->first;
 
-        if(connectionKey_to_interfaceKey.find(it->first) != connectionKey_to_interfaceKey.end()){
+        if(connectionId_to_interfaceId.find(it->first) != connectionId_to_interfaceId.end()){
 
-            int destKey = connectionKey_to_interfaceKey.at(it->first);
-            if(msgInterfaces.find(destKey) != msgInterfaces.end()){
-                sp<MessageInterface> dest = msgInterfaces.at(destKey)[1];
+            int destId = connectionId_to_interfaceId.at(it->first);
+            if(msgInterfaces.find(destId) != msgInterfaces.end()){
+                sp<MessageInterface> dest = msgInterfaces.at(destId)[1];
                 dest->send(message);
             } else {
-                connectionKey_to_interfaceKey.erase(it->first);
+                connectionId_to_interfaceId.erase(it->first);
             }
         }
     }
 
+    // Proceeds to the usual MessagingUnit's tick
     MessagingUnit::tick();
 }
 
-bool ConnectionUnit::removeMessageInterface(int interfaceKey) {
-    if(MessagingUnit::removeMessageInterface(interfaceKey)) {
-    
-        auto it = interfaceKey_to_preferredConnectionKey.find(interfaceKey);
-        if(it != interfaceKey_to_preferredConnectionKey.end()){
-            interfaceKey_to_preferredConnectionKey.erase(it);
+bool ConnectionUnit::removeMessageInterface(int interfaceId) {
+
+    if(MessagingUnit::removeMessageInterface(interfaceId)) {
+
+        // If the MessagingUnit was successfully removes, removes it from the preferred connection destination map 
+        auto it = interfaceId_to_preferredConnectionId.find(interfaceId);
+        if(it != interfaceId_to_preferredConnectionId.end()){
+            interfaceId_to_preferredConnectionId.erase(it);
         }
 
         return true;
@@ -119,12 +138,13 @@ bool ConnectionUnit::removeMessageInterface(int interfaceKey) {
     return false;
 }
 
-bool ConnectionUnit::removeMessageInterface(unordered_map<int, sp<MessageInterface>*>::iterator interfaceIt) {
+bool ConnectionUnit::removeMessageInterface(map<int, sp<MessageInterface>*>::iterator interfaceIt) {
     if(MessagingUnit::removeMessageInterface(interfaceIt)) {
     
-        auto it = interfaceKey_to_preferredConnectionKey.find(interfaceIt->first);
-        if(it != interfaceKey_to_preferredConnectionKey.end()){
-            interfaceKey_to_preferredConnectionKey.erase(it);
+        // If the MessagingUnit was successfully removes, removes it from the preferred connection destination map 
+        auto it = interfaceId_to_preferredConnectionId.find(interfaceIt->first);
+        if(it != interfaceId_to_preferredConnectionId.end()){
+            interfaceId_to_preferredConnectionId.erase(it);
         }
 
         return true;

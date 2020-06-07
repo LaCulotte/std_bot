@@ -50,8 +50,8 @@ void send2(sp<MessageInterface> i){
 }
 
 int main() {
-    Logger* l = Logger::getInstance();
-    l->init();
+    Logger::beginInstance();
+    // l->init();
 
     shared_ptr<MessageDataBuffer>ptr(new MessageDataBuffer());
     // shared_ptr<DataBuffer<char>> ptr_dat = dynamic_pointer_cast<DataBuffer<char>>(ptr);
@@ -143,12 +143,11 @@ int main() {
     //     cout << "Le client est connecté" << endl;
     // }
 
-    // BasicPrefixConnection conn;
     // conn.connected = true;
     // conn.connectedAddress = "localhost";
     // conn.socket = sock;
     // conn.connectTo("127.0.0.1", 8080);
-    
+
     sp<MessagingUnit> msgUnit1(new MessagingUnit());
     sp<MessagingUnit> msgUnit2(new ConnectionUnit());
     sp<MessagingUnit> msgUnit3(new MessagingUnit());
@@ -188,7 +187,8 @@ int main() {
     // sp<Message> msg(new RawMessage());
     // msgUnit1->sendSelfMessage(msg);
 
-    msgUnit1->sendMessage(make_shared<ConnectionRequestMessage>([](){return make_shared<BasicPrefixConnection>();}, "127.0.0.1", 8080), 0);
+    // msgUnit1->sendMessage(make_shared<ConnectionRequestMessage>([](){return make_shared<BasicPrefixConnection>();}, "127.0.0.1", 8080), 0);
+    msgUnit1->sendMessage(make_shared<ConnectionRequestMessage>(make_shared<BasicPrefixConnection>(), "127.0.0.1", 8080), 0);
     usleep(1000);
     msgUnit1->sendMessage(make_shared<ConnectionIdGetMessage>([](sp<Connection> c){return (bool) dynamic_pointer_cast<BasicPrefixConnection>(c);}), 0);
     usleep(1000);
@@ -204,6 +204,7 @@ int main() {
     cout << "disconnect" << endl;
     usleep(1500 * 1000);
 
+
     msgUnit1->stop();
     msgUnit2->stop();
     msgUnit3->stop();
@@ -214,6 +215,7 @@ int main() {
     msgUnit3->waitThreadEnd();
 
     cout << "tout fermé" << endl;
+
 
     // cout << "fr1 : " << fr1 << endl;
     // cout << "fr2 : " << fr2 << endl;
@@ -229,7 +231,6 @@ int main() {
     // for(sp<Frame> f : frs)
     //     cout << f << endl;
 
-    // ListeningServer ls(8080, 2);
 
     chrono::seconds s(1);
     chrono::system_clock::duration d = chrono::duration_cast<chrono::nanoseconds>(s);
@@ -242,6 +243,7 @@ int main() {
     // usleep(500*1000);
     // cout << "lsqkqjdqlskd" << endl;
 
+    // ListeningServer ls(8080, 2);
 
 
     // ls.beginListening();
@@ -303,16 +305,14 @@ int main() {
     //     return -1;
     // }
 
-    sp<Connection> c2 = make_shared<NetworkConnection>();
-    c2->temp();
 
     MessageDataBuffer dat({1, 2, 3});
-    dat.print();
+    cout << dat.toString() << endl;
     dat.insertDataSpace(3);
     dat.write({4, 5, 6, 7});
     dat.cursor_end();
     dat.insertDataSpace(3);
-    dat.print();
+    cout << dat.toString() << endl;
 
     // ls.stop();
     Logger::endInstance();
@@ -320,19 +320,12 @@ int main() {
 }
 
 /*
-TODO:
-
-Completer tous les TODO
-Rendre les remplissages d'arrays dans les fonctions du type removeFrames(int n) optionnels, en remplaçant avec une fonction du type removeFrames(int n, bool fill = false)
-Tester les constructeurs de copie, vérifier qu'ils copient ce qu'on veut. Si ce n'est pas le cas : les implémenter
-
-Commentaires
-Rendre les classes abstraites totalement abstraites => fonctions purement virutelles
-Logger => log la ligne de l'erreur et le fichier (voir macros __LINE__ et __FILE__)
-Documentation? => d'abord une implémentation
-
 Transmettre le "TODO tout à la fin" à l'implémentation
 
 TODO tout à la fin :
+Logger => log la ligne de l'erreur et le fichier (voir macros __LINE__ et __FILE__)
+Si le besoin se ressent, mettre plus de messages d'erreur dans le logger (can't find connection/Frame/MU - not the right type of parent/connection/message - fails)
+Si le besoin, mettre des try-catch en plus pour éviter les crash
 enlever les assert(false) qui on servi au débug
+documentation
 */

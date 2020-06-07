@@ -5,8 +5,10 @@
 
 class ClientConnection : public virtual NetworkConnection {
 public: 
-    ClientConnection() : NetworkConnection() {connectionKey = " ClientConnection "; };
+    // Constructor
+    ClientConnection() : NetworkConnection() { connectionDescription = " ClientConnection "; };
 
+    // Connects the connection to a remote server
     virtual bool connectTo(string address, int port);
     
 };

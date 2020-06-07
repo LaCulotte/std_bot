@@ -12,107 +12,103 @@ template<typename T>
 class DataBuffer{
 public:
 
-    //Constructors
+    // Constructor
     DataBuffer() {};
+    // Copy Constructor
     DataBuffer(const DataBuffer<T> &other) { data = other.data; };
-    
+    // Constructor with data vector initialisation
     DataBuffer(vector<T> dat) : data(dat) {};
+    // Constructor with data array initialisation
     DataBuffer(T *dat, int size);
 
-    //TODO : add Move operators and constructors
-
-    //Destructor
-    ~DataBuffer() = default;
-
-    //Copy overload
+    // Copy operator
     DataBuffer<T>& operator=(const DataBuffer<T> &other) { data = other.data; return *this; };
+    // Destructor
+    virtual ~DataBuffer() = default;
 
-    //TODO : remove?
-    virtual void bfunc() {};
-
-    //Clears data from buffer
+    // Clears data from buffer
     void clear();
 
-    //TODO : cleaner print
-    void print();
+    // Transforms the data buffer into a string
+    string toString();
 
-    //Size of the buffer
+    // Size of the buffer
     int size() { return data.size(); };
-    //Size of data between cursor and buffer's end 
+    // Size of data between cursor and buffer's end 
     int remainingDataSize() { return size() - cursor; }
-    //True if the cursor is at the end of the buffer
+    // True if the cursor is at the end of the buffer
     bool isExhausted() { return cursor >= size(); };
     
 
-    //Gets cursor position
+    // Gets cursor position
     int get_cursor() { return cursor; };
 
-    //Moves the cursor by offset on the right. Offset can be negative. Safeguarded
+    // Moves the cursor by offset on the right. Offset can be negative. Safeguarded
     bool cursor_move(int offset);
-    //Moves the cursor by 1 on the right. Safeguarded
+    // Moves the cursor by 1 on the right. Safeguarded
     bool cursor_increment();
-    //Moves the cursor by 1 on the left. Safeguarded
+    // Moves the cursor by 1 on the left. Safeguarded
     bool cursor_decrement();
 
-    //Sets the cursor position. Safeguarded
+    // Sets the cursor position. Safeguarded
     bool cursor_set(int pos);
-    //Sets the cursor at the beginning of the buffer
+    // Sets the cursor at the beginning of the buffer
     void cursor_reset() { cursor = 0; };
-    //Sets the cursor at the just before the end of the buffer. 
-    //Valid position for reading and writing
+    // Sets the cursor at the just before the end of the buffer. 
+    // Valid position for reading and writing
     void cursor_readEnd() { cursor = size() - 1; }
-    //Sets the cursor beyond the end of the buffer
-    //Position to write data after the buffer
-    //Valid position to write but invalid position to read
+    // Sets the cursor beyond the end of the buffer
+    // Position to write data after the buffer
+    // Valid position to write but invalid position to read
     void cursor_end() { cursor = size(); };
     
-    //Reads one unit of data
+    // Reads one unit of data
     T read();
-    //Reads n units of data
+    // Reads n units of data
     vector<T> read(int n);
-    //Reads all data
+    // Reads all data
     vector<T> read_all() { return data; }
 
-    //Writes data on the right of the cursor
+    // Writes data on the right of the cursor
     void write(T dat);
-    //Writes data on the right of the cursor
+    // Writes data on the right of the cursor
     void write(vector<T> dat);
 
-    //Insert data space on the right of the cursor
+    // Insert data space on the right of the cursor
     void insertDataSpace(int n);
 
-    //Pushes data at the end of the buffer
+    // Pushes data at the end of the buffer
     void push(T dat) { data.push_back(dat); };
-    //Pushes data at the end of the buffer
+    // Pushes data at the end of the buffer
     void push(vector<T> dat) { data.insert(data.end(), dat.begin(), dat.end()); };
-    //Pushes data at the end of the buffer
+    // Pushes data at the end of the buffer
     void push(T *dat, int length) { data.insert(data.end(), dat, dat + length); };
 
-    //Pops one unit of data from the end of the vector. Data is erased
+    // Pops one unit of data from the end of the vector. Data is erased
     T pop();
-    //Pops n units of data from the end of the vector. Data is erased
+    // Pops n units of data from the end of the vector. Data is erased
     vector<T> pop(int n);
 
-    //Splits DataBuffer from the cursor position to the end. Data is not erased.
+    // Splits DataBuffer from the cursor position to the end. Data is not erased.
     DataBuffer<T> split();
-    //Splits DataBuffer from 'index' position to the end. Data is not erased.
+    // Splits DataBuffer from 'index' position to the end. Data is not erased.
     DataBuffer<T> split(int index);
-    //Returns a slice of DataBuffer, from index 'beg' to 'end'. Data is not erased.
+    // Returns a slice of DataBuffer, from index 'beg' to 'end'. Data is not erased.
     DataBuffer<T> slice(int beg, int end);
 
-    //Return the actual data for more complex manipulation.
-    //If you modify it, you must be careful of the cursor's position.
-    //No verification will be done afterwards.
+    // Return the actual data for more complex manipulation.
+    // If you modify it, you must be careful of the cursor's position.
+    // No verification will be done afterwards.
     vector<T> &getData() { return data; }
 
 protected:
 
-    //Vector containing the actual data
+    // Vector containing the actual data
     vector<T> data;
 
-    //Cursor pointing to working data.
-    //Moved automatically when accessing/writing data
-    //from the cursor position.
+    // Cursor pointing to working data.
+    // Moved automatically when accessing/writing data
+    // from the cursor position.
     int cursor = 0;
 };
 
@@ -128,10 +124,19 @@ void DataBuffer<T>::clear(){
 }
 
 template<typename T>
-void DataBuffer<T>::print(){
-    for (T unit : data)
-        cout << unit << " ";
-    cout << endl;
+string DataBuffer<T>::toString(){
+    try {
+
+        stringstream str_stream;
+        for (T unit : data){
+            str_stream << unit << "; ";
+        }
+        return str_stream.str();
+
+    } catch (exception const& e) {
+        Logger::write(e.what(), LOG_DEBUG);
+        return "";
+    }
 }
 
 template<typename T>
@@ -274,10 +279,15 @@ DataBuffer<T> DataBuffer<T>::split(int index){
         return DataBuffer<T>();
     }
     
-    
-    vector<T> ret_data(data.begin() + index, data.end());
 
-    return DataBuffer<T>(ret_data);
+    try {
+        vector<T> ret_data(data.begin() + index, data.end());
+
+        return DataBuffer<T>(ret_data);
+    } catch (exception e) {
+        Logger::write("Error on DataBuffer split : " + (string) e.what(), LOG_ERROR);
+        return DataBuffer<T>();
+    }
 }
 
 template<typename T>
@@ -294,7 +304,7 @@ DataBuffer<T> DataBuffer<T>::slice(int beg, int end){
 
         return DataBuffer<T>(ret_data);
     } catch (std::exception const& e){
-        Logger::write(e.what());
+        Logger::write("Error on DataBuffer slice : " + (string) e.what(), LOG_ERROR);
         return DataBuffer<T>();
     }
 }
