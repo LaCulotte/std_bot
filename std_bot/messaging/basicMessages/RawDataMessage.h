@@ -24,7 +24,7 @@ public:
 
     unsigned int getId() override { return protocolId; };
 
-    static const unsigned int protocolId = 6;
+    static const unsigned int protocolId = 602;
 
 protected:
     // Raw data buffer.

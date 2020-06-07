@@ -17,17 +17,12 @@ public:
     // Destructor
     virtual ~PrefixedMessage() = default;
 
-    // Turns raw data into the usable data (message's attributes)
-    virtual bool deserialize(shared_ptr<MessageDataBuffer> input) override { return false; };
-    // Turns the message's attributes into raw data
-    virtual bool serialize(shared_ptr<MessageDataBuffer> output) override { return false; };
-
     // Returns the length of the message
     int getLength() { return length; };
     // Sets the length of the message
     void setLength(int l) { length = l; }; 
 
-private:
+protected:
 
     // Length of the message when it is turned into raw data (excuding the prefix)
     int length;

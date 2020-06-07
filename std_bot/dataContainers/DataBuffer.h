@@ -30,7 +30,7 @@ public:
     void clear();
 
     // Transforms the data buffer into a string
-    string toString();
+    virtual string toString();
 
     // Size of the buffer
     int size() { return data.size(); };
